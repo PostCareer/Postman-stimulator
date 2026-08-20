@@ -1,0 +1,390 @@
+index.html
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>郵差人生模擬器 v2.0</title>
+    <style>
+        :root {
+            --primary: #00875a;
+            --primary-dark: #006644;
+            --secondary: #e6f4ed;
+            --accent: #ffab00;
+            --danger: #de350b;
+            --bg: #f4f5f7;
+            --card-bg: #ffffff;
+            --text: #172b4d;
+            --text-sub: #5e6c84;
+            --border: #dfe1e6;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg);
+            color: var(--text);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 15px;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 550px;
+            background: var(--card-bg);
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+            overflow: hidden;
+            border: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .header {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 1.6rem;
+            margin-bottom: 4px;
+        }
+
+        .header p {
+            font-size: 0.85rem;
+            opacity: 0.9;
+        }
+
+        .status-bar {
+            background: var(--secondary);
+            padding: 10px 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border);
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--primary-dark);
+        }
+
+        .content {
+            padding: 20px;
+            flex-grow: 1;
+        }
+
+        .game-text {
+            font-size: 0.95rem;
+            line-height: 1.6;
+            margin-bottom: 18px;
+            color: var(--text);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .stat-card {
+            background: #fafbfc;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 10px;
+            font-size: 0.8rem;
+        }
+
+        .stat-card .title {
+            color: var(--text-sub);
+            font-size: 0.75rem;
+            margin-bottom: 2px;
+        }
+
+        .stat-card .value {
+            font-size: 1rem;
+            font-weight: bold;
+            color: var(--primary-dark);
+        }
+
+        .options-container {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .btn {
+            background: white;
+            border: 2px solid var(--primary);
+            color: var(--primary-dark);
+            padding: 12px 14px;
+            border-radius: 10px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            text-align: left;
+            transition: all 0.2s;
+        }
+
+        .btn:hover {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+            text-align: center;
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-dark);
+        }
+
+        .log-box {
+            background: #f4f5f7;
+            border-radius: 8px;
+            padding: 10px;
+            max-height: 100px;
+            overflow-y: auto;
+            font-size: 0.8rem;
+            color: var(--text-sub);
+            margin-top: 12px;
+            border-left: 4px solid var(--primary);
+        }
+
+        .hidden {
+            display: none !important;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header">
+        <h1>郵差人生模擬器 v2.0</h1>
+        <p>綠衣天使日常：避犬、上收、幹譙稽查與升資考！</p>
+    </div>
+
+    <div id="statusBar" class="status-bar hidden">
+        <div>📅 第 <span id="dayVal">1</span>/10 天</div>
+        <div>❤️ 體力: <span id="hpVal">100</span></div>
+        <div>📚 升資: <span id="studyVal">0%</span></div>
+        <div>⭐ 考績: <span id="scoreVal">50</span></div>
+    </div>
+
+    <div class="content">
+        <!-- 開始畫面 -->
+        <div id="startScreen">
+            <div class="game-text">
+                歡迎來到郵局職場！你是一名剛上路的外勤郵務員。<br><br>
+                除了處理不順路的包裹、支援突然出現的「收攬」職缺，還要面對稽查的微妙關切，以及夜間讀升資考的試驗。你能順利撐過這 10 天職場高壓嗎？
+            </div>
+            <button class="btn btn-primary" style="width:100%" onclick="initGame()">🎲 抽取天賦，開野狼出發！</button>
+        </div>
+
+        <!-- 天賦抽取畫面 -->
+        <div id="talentScreen" class="hidden">
+            <h3 style="margin-bottom:10px;color:var(--primary-dark);">抽取的初始天賦：</h3>
+            <div id="talentList" class="stats-grid"></div>
+            <button class="btn btn-primary" style="width:100%" onclick="startJob()">🛵 領取郵袋，準備出勤！</button>
+        </div>
+
+        <!-- 遊戲主畫面 -->
+        <div id="gameScreen" class="hidden">
+            <div id="eventTitle" style="font-weight:bold;color:var(--primary-dark);margin-bottom:6px;font-size:1rem;"></div>
+            <div id="eventDesc" class="game-text"></div>
+            <div id="options" class="options-container"></div>
+            <div id="logBox" class="log-box"></div>
+        </div>
+
+        <!-- 結局畫面 -->
+        <div id="endingScreen" class="hidden">
+            <h2 id="endingTitle" style="text-align:center;color:var(--primary-dark);margin-bottom:10px;"></h2>
+            <div id="endingDesc" class="game-text"></div>
+            <div id="finalStats" class="stats-grid"></div>
+            <button class="btn btn-primary" style="width:100%" onclick="location.reload()">🔄 再體驗一次郵差人生</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    let state = { day: 1, maxDays: 10, hp: 100, score: 50, studyProgress: 0, talents: [], logs: [] };
+
+    const TALENTS = [
+        { name: "綠衣俠客", desc: "腿力+20，防禦力極高，但容易激怒路邊家犬", hpBonus: 10 },
+        { name: "人情味大叔", desc: "溝通力強，遇到阿嬤常獲贈西瓜汁補血", hpBonus: 0 },
+        { name: "鋼鐵雙腿", desc: "爬高樓無所畏懼，體力上限提升", hpBonus: 20 },
+        { name: "夜讀學霸", desc: "夜間準備升資考效率+50%，但初始體力-10", hpBonus: -10 },
+        { name: "黃金車神", desc: "騎車技術極高，能閃避大部分突發車禍", hpBonus: 5 }
+    ];
+
+    const EVENTS = [
+        {
+            title: "📦 孤獨的大包裹（不順路抉擇）",
+            desc: "排信時發現一件超大包裹，地址在路線最偏遠的死角，單趟過去要浪費 20 分鐘...",
+            options: [
+                { text: "🚚 咬牙專程跑一趟送掉", action: (s) => { s.hp -= 15; s.score += 5; addLog("雖然多繞了遠路，但包裹安全送達。HP -15, 考績+5"); } },
+                { text: "🙈 假裝沒看到，明天再說", action: (s) => { 
+                    if(Math.random() > 0.5) {
+                        addLog("【運氣好】客戶根本沒追查，完全沒被投訴，隔天順路輕鬆送掉！");
+                    } else {
+                        s.score -= 15;
+                        addLog("【踩爆雷】客戶急著要用，直接打電話來郵局開罵！經理走過來關切... 考績 -15");
+                    }
+                }}
+            ]
+        },
+        {
+            title: "💬 LINE 群組段開噴稽查！",
+            desc: "今天區段包裹堆成山，你在局裡群組忍不住傳貼圖加語音狂幹譙稽查排班不公。結果...",
+            options: [
+                { text: "👀 默默收手機，裝作沒事繼續疊信", action: (s) => { 
+                    if(Math.random() > 0.5) {
+                        s.hp += 10;
+                        addLog("【大快人心】稽查自知理虧，默默跑來把你的大包裹拿去幫忙送了！HP +10");
+                    } else {
+                        s.hp += 5;
+                        addLog("【口臭威壓】稽查一邊口臭一邊碎碎唸，但還是默默拿走你的包裹拿去送了... HP +5");
+                    }
+                }}
+            ]
+        },
+        {
+            title: "🏢 支局電話催上收（收攬職缺問詢）",
+            desc: "局裡最近開了一個新職缺叫「收攬」。此時支局突然打電話過來，說有一批急件要上收，問你有沒有意願過去？",
+            options: [
+                { text: "🙋 打開方向燈，立刻跑去支局幫忙上收", action: (s) => { 
+                    s.hp -= 10; s.score += 15; 
+                    addLog("【好評收穫】你風塵仆仆趕去支援，支局經理對你讚不絕口！考績 +15"); 
+                }},
+                { text: "🙅 婉拒：「我現在區段滿載，真的抽不出空！」", action: (s) => { 
+                    addLog("【稽查神救援】你選擇不去收，結果稽查只能無奈默默自己開車去收回來了。"); 
+                }}
+            ]
+        },
+        {
+            title: "🐕 地獄門神（家犬襲擊）",
+            desc: "你正準備投入掛號信，門口突現一隻未繫繩的大黑狗對你咆哮衝來！",
+            options: [
+                { text: "🛡️ 用大郵袋護住身體硬扛", action: (s) => { s.hp -= 5; addLog("你用郵袋防禦成功，雖然有點狼狽但順利投遞！HP -5"); } },
+                { text: "🗣️ 用嚴肅眼神大聲威嚇", action: (s) => { 
+                    if(Math.random() > 0.4) { addLog("黑狗被你的郵差威嚴嚇退了！成功投遞！"); }
+                    else { s.hp -= 20; addLog("黑狗不吃這套！你的褲管被咬破了... HP -20"); }
+                }}
+            ]
+        },
+        {
+            title: "📖 晚間自由時間（升資考備考）",
+            desc: "結束了一整天的投遞，回到宿舍，你要如何分配寶貴的夜晚？",
+            options: [
+                { text: "📚 苦讀民法與郵政法規", action: (s) => { 
+                    let bonus = s.talents.some(t => t.name === "夜讀學霸") ? 25 : 15;
+                    s.studyProgress += bonus; 
+                    s.hp -= 10; 
+                    addLog(`你讀書讀到半夜，升資考進度 +${bonus}%！HP -10`); 
+                }},
+                { text: "😴 什麼都不管，直接睡爆", action: (s) => { s.hp = Math.min(100, s.hp + 25); addLog("充足的睡眠讓你體力大幅恢復！HP +25"); } }
+            ]
+        }
+    ];
+
+    function addLog(msg) {
+        state.logs.unshift(`[第${state.day}天] ${msg}`);
+        document.getElementById('logBox').innerHTML = state.logs.join('<br>');
+    }
+
+    function initGame() {
+        let shuffled = [...TALENTS].sort(() => 0.5 - Math.random());
+        state.talents = shuffled.slice(0, 2);
+        let talentHtml = "";
+        state.talents.forEach(t => {
+            state.hp += t.hpBonus;
+            talentHtml += `<div class="stat-card"><div class="title">天賦</div><div class="value">${t.name}</div><div style="font-size:0.75rem;color:#666;margin-top:2px;">${t.desc}</div></div>`;
+        });
+        document.getElementById('talentList').innerHTML = talentHtml;
+        document.getElementById('startScreen').classList.add('hidden');
+        document.getElementById('talentScreen').classList.remove('hidden');
+    }
+
+    function startJob() {
+        document.getElementById('talentScreen').classList.add('hidden');
+        document.getElementById('statusBar').classList.remove('hidden');
+        document.getElementById('gameScreen').classList.remove('hidden');
+        nextDay();
+    }
+
+    function updateUI() {
+        document.getElementById('dayVal').innerText = state.day;
+        document.getElementById('hpVal').innerText = state.hp;
+        document.getElementById('studyVal').innerText = state.studyProgress + "%";
+        document.getElementById('scoreVal').innerText = state.score;
+    }
+
+    function nextDay() {
+        if (state.day > state.maxDays || state.hp <= 0) {
+            endGame();
+            return;
+        }
+        updateUI();
+        let evt = EVENTS[(state.day - 1) % EVENTS.length];
+        document.getElementById('eventTitle').innerText = evt.title;
+        document.getElementById('eventDesc').innerText = evt.desc;
+        let optionsHtml = "";
+        evt.options.forEach((opt, idx) => {
+            optionsHtml += `<button class="btn" onclick="handleOption(${idx})">${opt.text}</button>`;
+        });
+        document.getElementById('options').innerHTML = optionsHtml;
+    }
+
+    function handleOption(optionIdx) {
+        let evt = EVENTS[(state.day - 1) % EVENTS.length];
+        evt.options[optionIdx].action(state);
+        state.day += 1;
+        if (state.hp <= 0) {
+            endGame();
+        } else {
+            nextDay();
+        }
+    }
+
+    function endGame() {
+        document.getElementById('gameScreen').classList.add('hidden');
+        document.getElementById('statusBar').classList.add('hidden');
+        document.getElementById('endingScreen').classList.remove('hidden');
+        let title = "", desc = "";
+        if (state.hp <= 0) {
+            title = "🏥 職災退休（過勞/咬傷）";
+            desc = "你的體力耗盡，不得不請長假療養。雖然這次沒能撐過試用期，但你獲得了『野犬剋星』的尊嚴稱號！";
+        } else if (state.studyProgress >= 60) {
+            title = "🎉 成功轉任內勤（升資考及格）";
+            desc = "恭喜你！白天高強度投遞與應付稽查之餘，夜間苦讀終於有了回報，成功考取升資考轉任內勤，正式坐進冷氣房辦公室！";
+        } else if (state.score >= 70) {
+            title = "🏆 局長與經理眼中的紅人";
+            desc = "無論是收攬支援還是處置包裹都處理得井井有條，連支局經理都非常欣賞你！";
+        } else {
+            title = "🛵 平凡但堅韌的郵務員";
+            desc = "你順利通過了試用期，日復一日地穿梭在大街小巷，繼續守護著大家的信件與包裹。";
+        }
+        document.getElementById('endingTitle').innerText = title;
+        document.getElementById('endingDesc').innerText = desc;
+        document.getElementById('finalStats').innerHTML = `
+            <div class="stat-card"><div class="title">完成天數</div><div class="value">${Math.min(state.day, state.maxDays)} 天</div></div>
+            <div class="stat-card"><div class="title">升資進度</div><div class="value">${state.studyProgress}%</div></div>
+            <div class="stat-card"><div class="title">考績分數</div><div class="value">${state.score} 分</div></div>
+            <div class="stat-card"><div class="title">剩餘體力</div><div class="value">${Math.max(0, state.hp)}</div></div>
+        `;
+    }
+</script>
+</body>
+</html>
+
