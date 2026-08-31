@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>郵務人生模擬器 V3.2</title>
+    <title>郵務人生模擬器 V3.5</title>
     <style>
         :root {
             --green-main: #008751;
@@ -27,7 +27,7 @@
             background: #e8f5e9; padding: 10px; border-radius: 10px; margin-bottom: 12px;
             text-align: center; font-size: 13px;
         }
-        .status-item span { display: block; font-weight: bold; font-size: 15px; color: var(--green-dark); }
+        .status-item span { display: block; font-weight: bold; font-size: 14px; color: var(--green-dark); }
 
         .stats-panel {
             background: #f1f8e9; border: 1px solid #c8e6c9; border-radius: 10px;
@@ -79,9 +79,9 @@
 <body>
 
 <div class="container">
-    <h1>📮 郵務人生模擬器 V3.2</h1>
+    <h1>📮 郵務人生模擬器 V3.5</h1>
 
-    <!-- 階段 1：角色、年齡與代號選擇 -->
+    <!-- 階段 1：設定 -->
     <div id="setup-page">
         <div class="setup-group">
             <label for="player-name">郵務士姓名：</label>
@@ -94,8 +94,8 @@
         <div class="setup-group">
             <label for="player-code">選擇人生代號（初始路線與能力）：</label>
             <select id="player-code">
-                <option value="A">【代號 A：巷弄傳奇】高熟練/高抗犬，專精外勤極速送件</option>
-                <option value="B">【代號 B：管理之星】高應變，容易通過內部升遷考試轉內勤</option>
+                <option value="A">【代號 A：巷弄傳奇】高熟練/高人緣，專精外勤極速送件</option>
+                <option value="B">【代號 B：管理之星】高應變/向上管理，容易通過升遷考試</option>
                 <option value="C">【代號 C：鐵人郵務士】高體力，抗天氣災害與極端勤務</option>
             </select>
         </div>
@@ -110,7 +110,7 @@
             <div class="status-item">考績甲等<span id="stat-eval">0 次</span></div>
         </div>
 
-        <!-- 屬性點數加點面板 -->
+        <!-- 屬性加點面板 -->
         <div class="stats-panel">
             <div class="stats-header">
                 <span>📊 屬性能力值 (上限 20)</span>
@@ -125,12 +125,16 @@
                 <button class="btn-add" id="btn-add-route" onclick="addPoint('route')">+1</button>
             </div>
             <div class="stat-row">
-                <span>🐕 抗犬與防護：<b id="val-dog">10</b>/20</span>
-                <button class="btn-add" id="btn-add-dog" onclick="addPoint('dog')">+1</button>
+                <span>👔 向上管理：<b id="val-management">10</b>/20</span>
+                <button class="btn-add" id="btn-add-management" onclick="addPoint('management')">+1</button>
             </div>
             <div class="stat-row">
                 <span>📚 處事與應變：<b id="val-smart">10</b>/20</span>
                 <button class="btn-add" id="btn-add-smart" onclick="addPoint('smart')">+1</button>
+            </div>
+            <div class="stat-row">
+                <span>🤝 人緣社交：<b id="val-relationship">10</b>/20</span>
+                <button class="btn-add" id="btn-add-relationship" onclick="addPoint('relationship')">+1</button>
             </div>
         </div>
 
@@ -159,9 +163,9 @@
     let player = {
         name: "", code: "A", age: 18, startAge: 18, role: "外勤郵務員",
         points: 3,
-        stats: { stamina: 10, route: 10, dog: 10, smart: 10 },
+        stats: { stamina: 10, route: 10, management: 10, smart: 10, relationship: 10 },
         delivered: 0, gradeA: 0,
-        examPassed: false
+        examAttempted: false
     };
 
     const MAX_STAT = 20;
@@ -172,9 +176,9 @@
         player.age = player.startAge;
         player.code = document.getElementById("player-code").value;
 
-        if (player.code === "A") { player.stats.route = 14; player.stats.dog = 13; }
-        if (player.code === "B") { player.stats.smart = 14; player.stats.route = 12; }
-        if (player.code === "C") { player.stats.stamina = 15; player.stats.dog = 12; }
+        if (player.code === "A") { player.stats.route = 14; player.stats.relationship = 13; }
+        if (player.code === "B") { player.stats.smart = 14; player.stats.management = 14; }
+        if (player.code === "C") { player.stats.stamina = 15; player.stats.route = 12; }
 
         document.getElementById("setup-page").classList.add("hidden");
         document.getElementById("game-page").classList.remove("hidden");
@@ -195,12 +199,11 @@
             document.getElementById(`btn-add-${key}`).disabled = (player.points <= 0 || player.stats[key] >= MAX_STAT);
         }
 
-        // 升遷考試限制：必須「入職滿 3 年」
         let examUnlockAge = player.startAge + 3;
         let examBtn = document.getElementById("btn-exam");
-        if (player.examPassed) {
+        if (player.examAttempted) {
             examBtn.disabled = true;
-            examBtn.innerText = "✅ 已轉為內勤人員";
+            examBtn.innerText = "❌ 轉內勤失敗（已被退貨回半夜班）";
         } else if (player.age < examUnlockAge) {
             examBtn.disabled = true;
             examBtn.innerText = `🔒 升遷考試（須任職滿 3 年，還差 ${examUnlockAge - player.age} 年）`;
@@ -218,26 +221,21 @@
         }
     }
 
-    // 事件庫：融入 8 大特化事件
-    const eventPool = [
+    // 一般日間事件庫
+    const dayEventPool = [
         {
             title: "🥮 中秋節包裹量暴增危機",
             desc: "中秋節包裹爆量！資深同事全提早排休，口臭很重的稽查還一直站在你背後盯著你，該怎麼辦？",
             options: [
                 {
                     text: "a) 準時下班！明天的事交給明天的我",
-                    result: "雖然保住了個人生活品質，但沒送完被稽查碎碎唸，心情大受影響。",
-                    changes: { smart: -1 }, addPoints: 1, grade: false
+                    result: "雖然保住了個人生活品質，但沒送完被稽查碎碎唸，向上管理受影響。",
+                    changes: { management: -1 }, addPoints: 1, grade: false
                 },
                 {
                     text: "b) 任勞任怨，加班送到完",
-                    result: "硬是把包裹全消化掉！獲得考績肯定，體能與路線熟練度大幅提升。",
-                    changes: { stamina: 1, route: 1 }, addPoints: 1, grade: true
-                },
-                {
-                    text: "c) 直接擺爛！沒送去就按「安排投遞」",
-                    result: "省事是省事，但被民眾爆量投訴，考績泡湯，應變能力也被質疑。",
-                    changes: { smart: -2 }, addPoints: 0, grade: false
+                    result: "硬是把包裹全消化掉！獲得考績肯定，體能與向上管理大幅提升。",
+                    changes: { stamina: 1, management: 1 }, addPoints: 1, grade: true
                 }
             ]
         },
@@ -247,119 +245,49 @@
             options: [
                 {
                     text: "a) 硬著頭皮送完！衝了啦",
-                    result: "全身濕透，隔天直接重感冒！但你展現了鐵人意志。",
+                    result: "全身濕透，隔天直接重感冒！但展現了鐵人意志。",
                     changes: { stamina: -1, route: 1 }, addPoints: 0, grade: false
                 },
                 {
                     text: "b) 打電話請求稽查支援",
-                    result: "稽查雖然邊幹譙邊送雨具來，但至少信件與人體都保住了，展現了處事智慧。",
-                    changes: { smart: 1 }, addPoints: 1, grade: true
+                    result: "稽查雖然邊幹譙邊送雨具來，但至少信件與人體都保住了，向上管理+1。",
+                    changes: { management: 1 }, addPoints: 1, grade: true
+                }
+            ]
+        }
+    ];
+
+    // 🌙 專屬指定「半夜班外勤」爆笑夜間事件庫
+    const nightEventPool = [
+        {
+            title: "🚚 夜班大司機的體味嫌棄",
+            desc: "半夜跟大郵車對接搬運大宗郵袋，夜班大司機走近你身邊突然皺眉，大聲嫌棄：「靠，你身上味很臭欸！」",
+            options: [
+                {
+                    text: "a) 默默吞下，尷尬地笑笑退後一步",
+                    result: "司機搖搖頭走掉，你在局裡的人緣遭遇打擊，氣氛變得很尷尬。",
+                    changes: { relationship: -1 }, addPoints: 0, grade: false
                 },
                 {
-                    text: "c) 擺爛！把車子推進水溝，一了百了",
-                    result: "極端的操作！車子壞了信也濕了，被局裡嚴厲處分，能力大扣！",
-                    changes: { stamina: -2, smart: -2 }, addPoints: 0, grade: false
+                    text: "b) 買罐伯朗咖啡請司機，說：「哥，半夜體力活汗味重啦！」",
+                    result: "司機接過咖啡笑出來，化解了尷尬，甚至還幫你分擔搬了兩袋！人緣與應變大提升！",
+                    changes: { relationship: 1, smart: 1 }, addPoints: 1, grade: true
                 }
             ]
         },
         {
-            title: "📱 郵務群組驚魂記",
-            desc: "原本要發給約會對象的約砲簡訊，不小心手滑傳到單位的大群組裡了！",
+            title: "🛒 雙籃車衝刺月台慘案",
+            desc: "半夜為了趕時間下班，你圖方便打算「一次直接推兩台籃車」進月台，結果重心配重失衡...",
             options: [
                 {
-                    text: "a) 點選「刪除」（只在自己手機刪掉）",
-                    result: "糟了！你不知道這只會刪掉你自己的畫面！群組裡全看光光，社交死亡，應變能力大打折。",
-                    changes: { smart: -2 }, addPoints: 0, grade: false
+                    text: "a) 硬幹拉住！試圖靠蠻力硬壓",
+                    result: "砰！籃車直接連人帶車推落月台下！郵件散落一地，現場一片狼藉...處事與應變大幅扣分！",
+                    changes: { smart: -2, stamina: -1 }, addPoints: 0, grade: false
                 },
                 {
-                    text: "b) 點選「收回」（全體收回）",
-                    result: "眼疾手快！在其他人看到前秒收回，冷汗直流但成功保住社會性人設！應變能力+1。",
-                    changes: { smart: 1 }, addPoints: 1, grade: true
-                }
-            ]
-        },
-        {
-            title: "🏥 醫師的警訊通知",
-            desc: "最近體檢報告出來，醫生態度嚴肅地宣布你需要立刻安排動手術！",
-            options: [
-                {
-                    text: "a) 聽醫生話，請假動手術",
-                    result: "經過一段時間調養後康復，雖然耽誤了一點公務，但元氣大傷後體能漸漸恢復。",
-                    changes: { stamina: 1 }, addPoints: 1, grade: false
-                },
-                {
-                    text: "b) 不去醫院，在家硬撐休息",
-                    result: "小病拖成大病！體力嚴重下滑，精神狀態極差。",
-                    changes: { stamina: -3 }, addPoints: 0, grade: false
-                }
-            ]
-        },
-        {
-            title: "🩹 職災請假與共體時艱",
-            desc: "在外送信雷殘腳嚴重受傷請工傷假。稽查打電話來請你「共體時艱」出來上班...",
-            options: [
-                {
-                    text: "a) 勉強出來上班，結果舊傷復發怒告郵局",
-                    result: "舊傷加重體能受創！但你硬氣提告獲得應有賠償，震撼全局！",
-                    changes: { stamina: -2, smart: 2 }, addPoints: 1, grade: false
-                },
-                {
-                    text: "b) 堅持不要！申請轉調他局繼續搞事",
-                    result: "成功換了新環境，保留了實力，但也獲得了「刺頭」的稱號。",
-                    changes: { smart: 1 }, addPoints: 0, grade: false
-                }
-            ]
-        },
-        {
-            title: "⚖️ 訴訟文書的現場詢問",
-            desc: "送信送到一半，住戶突然衝出來焦急地問你有沒有他的「訴訟文書」？",
-            options: [
-                {
-                    text: "a) 說沒有！然後直接把信投到他家郵筒",
-                    result: "住戶沒當面拿到很生氣，轉頭直接向總局投訴你！處事應變扣分。",
-                    changes: { smart: -1 }, addPoints: 0, grade: false
-                },
-                {
-                    text: "b) 說有，當場遞給對方",
-                    result: "沒想到對方因為訴訟官司加吸毒理智不清，接過信後突然發狂把你暴打一波！",
-                    changes: { stamina: -2, dog: 1 }, addPoints: 0, grade: false
-                }
-            ]
-        },
-        {
-            title: "👀 窗口來了個絕世妹子",
-            desc: "今天窗口來了一位氣質絕佳的妹子要領取掛號信！",
-            options: [
-                {
-                    text: "a) 拿手機出來偷拍",
-                    result: "被現場民眾當場抓包！差點被移送法辦，名聲掃地，考績直接泡湯。",
-                    changes: { smart: -2 }, addPoints: 0, grade: false
-                },
-                {
-                    text: "b) 偷看招領單上的地址跟名字",
-                    result: "雖然滿足了好奇心，但這種危險行為讓自己心虛不已，完全沒增長正向能力。",
-                    changes: { smart: 0 }, addPoints: 0, grade: false
-                },
-                {
-                    text: "c) 我全都要！（專業應對並展現優質服務）",
-                    result: "專業迅速地處理完掛號，給對方留下極佳印象，展現專業形象！",
-                    changes: { smart: 1 }, addPoints: 1, grade: true
-                }
-            ]
-        },
-        {
-            title: "📄 投遞回執遺忘事件",
-            desc: "回局整理時，驚覺今天送完大宗掛號的「回執」忘了繳回！",
-            options: [
-                {
-                    text: "a) 趕緊找出來並補繳",
-                    result: "臨危不亂找回回執並補齊程序，保住了名譽與流程規範。",
-                    changes: { smart: 1 }, addPoints: 1, grade: true
-                },
-                {
-                    text: "b) 假裝沒事，直接塞進機車車廂深處",
-                    result: "紙包不住火，過幾天稽查查帳發現缺件，你被記了申誡一支！",
-                    changes: { smart: -1, route: -1 }, addPoints: 0, grade: false
+                    text: "b) 發現不對勁立刻放手大喊：「要掉啦！」請旁邊同事幫忙拉",
+                    result: "大家手忙腳亂幫忙攔住，雖然沒掉落月台，但被現場主管痛罵了一頓！向上管理扣分，但保住了應變能力。",
+                    changes: { management: -1, relationship: 1 }, addPoints: 1, grade: false
                 }
             ]
         }
@@ -371,11 +299,15 @@
         document.getElementById("btn-main").classList.add("hidden");
         document.getElementById("log-container").innerHTML = "";
 
-        // 每年固定成長：獲得 1 點自由點數
         player.points += 1;
         updateUI();
 
-        let evt = eventPool[Math.floor(Math.random() * eventPool.length)];
+        let currentPool = dayEventPool;
+        if (player.role.includes("半夜班")) {
+            currentPool = Math.random() < 0.8 ? nightEventPool : dayEventPool;
+        }
+
+        let evt = currentPool[Math.floor(Math.random() * currentPool.length)];
         document.getElementById("event-title").innerText = `📅 【${player.age} 歲】 ${evt.title}`;
         document.getElementById("event-desc").innerText = evt.desc;
 
@@ -393,23 +325,20 @@
     function processChoice(opt) {
         let changeLogs = [];
 
-        // 1. 套用能力值增減
         if (opt.changes) {
             for (let key in opt.changes) {
                 player.stats[key] += opt.changes[key];
-                let nameMap = { stamina: "體能", route: "路線", dog: "抗犬", smart: "處事" };
+                let nameMap = { stamina: "體能", route: "路線", management: "向上管理", smart: "處事與應變", relationship: "人緣" };
                 let valStr = opt.changes[key] > 0 ? `+${opt.changes[key]}` : `${opt.changes[key]}`;
                 changeLogs.push(`${nameMap[key]} ${valStr}`);
             }
         }
 
-        // 2. 獲得點數
         if (opt.addPoints > 0) {
             player.points += opt.addPoints;
             changeLogs.push(`獲得自由點數 +${opt.addPoints}`);
         }
 
-        // 3. 考績判定
         if (opt.grade) {
             player.gradeA++;
             changeLogs.push(`獲得考績甲等`);
@@ -417,7 +346,6 @@
 
         player.delivered += Math.floor(player.stats.route * 1200 + 8000);
 
-        // 顯示結果面板
         let logText = `📢 <b>【選擇結果】</b><br>${opt.result}<br><br><b>📈 影響結果：</b> ${changeLogs.length > 0 ? changeLogs.join(" | ") : "無能力變動"}`;
         document.getElementById("choices-container").innerHTML = "";
         document.getElementById("log-container").innerHTML = `<div class="log-box">${logText}</div>`;
@@ -432,34 +360,38 @@
 
     function takeExam() {
         let examUnlockAge = player.startAge + 3;
-        if (player.examPassed || player.age < examUnlockAge) return;
+        if (player.examAttempted || player.age < examUnlockAge) return;
         
-        let rate = 0.3 + (player.stats.smart * 0.03);
-        if (Math.random() < rate) {
-            player.examPassed = true; player.role = "內勤郵務士";
-            alert("🎉 恭喜！你順利考取內部升遷，轉為內勤職務！");
-            updateUI();
-        } else {
-            alert(`❌ 考試未通過 (目前成功率: ${Math.round(rate*100)}%)，建議繼續提升「處事應变」能力！`);
-        }
+        player.examAttempted = true;
+        
+        alert("🚨 系統退貨警告：\n\n「你他媽都說是郵務人生了，轉三小內勤？適應不良，被退貨回原局做半夜班！」");
+        
+        player.role = "外勤郵務士（半夜班）";
+        updateUI();
     }
 
     function endGame() {
         document.getElementById("game-page").classList.add("hidden");
         document.getElementById("result-page").classList.remove("hidden");
 
-        let title = "【堅守崗位郵務員】";
-        if (player.stats.route >= 18) title = "【活地圖巷弄傳奇】";
-        if (player.stats.smart >= 18 && player.examPassed) title = "【郵政卓越高階主管】";
-        if (player.stats.stamina >= 18) title = "【不屈鐵人郵務士】";
+        let finalTitle = "【堅守崗位郵務員】";
+        if (player.role.includes("半夜班")) {
+            finalTitle = "【月台籃車殺手．夜行郵務傳說】";
+        } else if (player.stats.relationship >= 18) {
+            finalTitle = "【局內人氣王．萬人迷郵務士】";
+        } else if (player.stats.management >= 18) {
+            finalTitle = "【向上管理大師．長官紅人】";
+        } else if (player.stats.route >= 18) {
+            finalTitle = "【活地圖巷弄傳奇】";
+        }
 
         document.getElementById("summary-content").innerHTML = `
             <b>姓名：</b> ${player.name} (代號 ${player.code})<br>
             <b>開局設定：</b> ${player.startAge} 歲入職<br>
-            <b>最終稱號：</b> <span style="font-size:18px; color:#008751; font-weight:bold;">${title}</span><br>
+            <b>最終稱號：</b> <span style="font-size:18px; color:#008751; font-weight:bold;">${finalTitle}</span><br>
             <hr>
             📊 <b>最終能力總結：</b><br>
-            - 體能: ${player.stats.stamina} / 熟練: ${player.stats.route} / 抗犬: ${player.stats.dog} / 應變: ${player.stats.smart}<br>
+            - 體能: ${player.stats.stamina} / 熟練: ${player.stats.route} / 向上管理: ${player.stats.management} / 應變: ${player.stats.smart} / 人緣: ${player.stats.relationship}<br>
             <hr>
             📮 <b>生涯處理郵件總數：</b> ${player.delivered.toLocaleString()} 件<br>
             🏆 <b>獲得考績甲等：</b> ${player.gradeA} 次<br>
