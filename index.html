@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>郵務人生模擬器 V2.0 - 互動決策版</title>
+    <style>
+        :root {
+            --green-main: #008751;
+            --green-dark: #005c37;
+            --bg-color: #f4f6f8;
+            --card-bg: #ffffff;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: var(--bg-color);
+            margin: 0;
+            padding: 15px;
+            color: #333;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: var(--card-bg);
+            border-radius: 16px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            padding: 20px;
+        }
+        h1 { color: var(--green-main); text-align: center; margin-top: 0; font-size: 24px; }
+        
+        .status-bar {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 6px;
+            background: #e8f5e9;
+            padding: 10px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            text-align: center;
+            font-size: 13px;
+        }
+        .status-item span {
+            display: block;
+            font-weight: bold;
+            font-size: 15px;
+            color: var(--green-dark);
+        }
+
+        .event-card {
+            background: #fafafa;
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 15px;
+            min-height: 120px;
+        }
+        .event-title {
+            font-size: 17px;
+            font-weight: bold;
+            color: #1a237e;
+            margin-bottom: 8px;
+        }
+        .event-desc {
+            font-size: 15px;
+            line-height: 1.5;
+            color: #424242;
+        }
+
+        .choices-container {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .btn-choice {
+            width: 100%;
+            background-color: #ffffff;
+            color: #333;
+            border: 2px solid var(--green-main);
+            padding: 12px 15px;
+            font-size: 15px;
+            font-weight: bold;
+            border-radius: 10px;
+            cursor: pointer;
+            text-align: left;
+            transition: all 0.2s;
+        }
+        .btn-choice:hover {
+            background-color: var(--green-main);
+            color: white;
+        }
+
+        .btn-action {
+            width: 100%;
+            background-color: var(--green-main);
+            color: white;
+            border: none;
+            padding: 14px;
+            font-size: 16px;
+            font-weight: bold;
+            border-radius: 10px;
+            cursor: pointer;
+        }
+        .btn-action:hover { background-color: var(--green-dark); }
+        .btn-action:disabled { background-color: #ccc; cursor: not-allowed; }
+
+        .setup-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; }
+        input, select {
+            width: 100%; padding: 10px; border: 1px solid #ccc;
+            border-radius: 8px; box-sizing: border-box; font-size: 15px;
+        }
+        .hidden { display: none; }
+        .log-box {
+            background: #fffde7;
+            border-left: 4px solid #fbc02d;
+            padding: 10px;
+            margin-top: 10px;
+            font-size: 14px;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>📮 郵務人生模擬器 V2.0</h1>
+
+    <!-- 階段 1：角色設定 -->
+    <div id="setup-page">
+        <div class="setup-group">
+            <label for="player-name">郵務士姓名：</label>
+            <input type="text" id="player-name" placeholder="請輸入姓名" value="郵小弟">
+        </div>
+        <div class="setup-group">
+            <label for="player-trait">天賦選擇：</label>
+            <select id="player-trait">
+                <option value="dog">🐕 狗語者（遇到猛犬事件更容易成功）</option>
+                <option value="stamina">⚡ 體力怪物（體力上限高，不易累倒）</option>
+                <option value="smart">📚 考霸基因（參加內部升遷考試成功率上升）</option>
+            </select>
+        </div>
+        <button class="btn-action" onclick="startGame()">開啟郵務生涯！</button>
+    </div>
+
+    <!-- 階段 2：主遊戲畫面 -->
+    <div id="game-page" class="hidden">
+        <div class="status-bar">
+            <div class="status-item">年齡/職務<span id="stat-age">18歲 (外勤)</span></div>
+            <div class="status-item">體力<span id="stat-hp">100/100</span></div>
+            <div class="status-item">滿意度<span id="stat-satis">80分</span></div>
+            <div class="status-item">考績甲等<span id="stat-eval">0 次</span></div>
+        </div>
+
+        <div class="event-card">
+            <div class="event-title" id="event-title">年度開端</div>
+            <div class="event-desc" id="event-desc">點擊下方按鈕開始今年的投遞任務！</div>
+            <div id="log-container"></div>
+        </div>
+
+        <!-- 動態選項按鈕區 -->
+        <div class="choices-container" id="choices-container"></div>
+
+        <button id="btn-main" class="btn-action" onclick="startYear()">開始進行今年業務</button>
+        <button id="btn-exam" onclick="takeExam()" style="background-color: #0288d1; margin-top: 8px;" class="btn-action">📝 報名內部升遷考試 (轉內勤)</button>
+    </div>
+
+    <!-- 階段 3：退休結算 -->
+    <div id="result-page" class="hidden">
+        <h2>🏆 郵務生涯榮退報告</h2>
+        <div id="summary-content" style="line-height: 1.8; background:#fff8e1; padding:15px; border-radius:10px;"></div>
+        <br>
+        <button class="btn-action" onclick="location.reload()">重新體驗新人生</button>
+    </div>
+</div>
+
+<script>
+    let player = {
+        name: "", trait: "", age: 18, role: "外勤郵務員",
+        hp: 100, maxHp: 100, satisfaction: 80, gradeA: 0,
+        delivered: 0, dogsEncountered: 0, dogBites: 0,
+        examPassed: false, choicesMade: 0
+    };
+
+    // 隨機事件庫
+    const events = [
+        {
+            title: "🐕 巷口猛犬擋路",
+            desc: "你剛騎車進入老舊巷弄，一隻沒繫繩的黑狗衝出來對你狂吠，死死擋在你要送件的門口！",
+            options: [
+                { text: "🛡️ 拿起公務包當盾牌，小心翼翼推進", action: (p) => {
+                    p.hp -= 5;
+                    p.dogsEncountered++;
+                    return "你用堅固的公務包擋住黑狗，雖然有點耗體力，但順利完成投遞！（體力 -5）";
+                }},
+                { text: "💨 硬衝！憑腳程一口氣衝過去投信", action: (p) => {
+                    p.dogsEncountered++;
+                    if (p.trait === "dog" || Math.random() < 0.4) {
+                        return "你展現了驚人的速度，黑狗根本追不上你！順利送達！";
+                    } else {
+                        p.hp -= 20; p.dogBites++;
+                        return "慘了！屁股被黑狗咬了一口！痛得你哇哇大叫。（體力 -20，被咬 +1）";
+                    }
+                }},
+                { text: "🍖 拿口袋裡的狗肉乾試圖賄賂牠", action: (p) => {
+                    p.dogsEncountered++;
+                    p.satisfaction += 2;
+                    return "黑狗開心吃起肉乾，還對你搖尾巴！你成功收服了這一區的狗霸王！（滿意度 +2）";
+                }}
+            ]
+        },
+        {
+            title: "📦 掛號信按門鈴無人回應",
+            desc: "這是一封重要掛號信，你按了三次門鈴都沒有人應門，但二樓窗戶似乎有電燈亮著...",
+            options: [
+                { text: "📝 遵守規定，開立招領通知單貼門口", action: (p) => {
+                    return "你依規定開立招領單，過程完全合規，繼續前往下一家。";
+                }},
+                { text: "🗣️ 在樓下大聲呼喚：「OOO 先生/小姐！有掛號信喔！」", action: (p) => {
+                    if (Math.random() < 0.7) {
+                        p.satisfaction += 5;
+                        return "住戶趕緊跑下來接信，非常感激你的熱心！（民眾滿意度 +5）";
+                    } else {
+                        p.satisfaction -= 3;
+                        return "鄰居嫌你太吵吵到小孩睡覺，被罵了一頓...（滿意度 -3）";
+                    }
+                }},
+                { text: "📞 拿私人手機打電話給收件人", action: (p) => {
+                    p.satisfaction += 8;
+                    return "收件人說他剛好在附近，馬上趕回來簽收，誇獎你服務真好！（滿意度 +8）";
+                }}
+            ]
+        },
+        {
+            title: "🌧️ 午後突發暴雨",
+            desc: "送件送到一半，天空突然下起豪雨！你的雨衣放在車廂深處，包包裡還有好幾封重要包裹。",
+            options: [
+                { text: "🛑 趕緊找騎樓躲雨，等雨小一點再送", action: (p) => {
+                    p.hp += 5;
+                    return "雨勢稍緩後你繼續送件，信件完好無損，身體也沒淋濕。（體力 +5）";
+                }},
+                { text: "⚡ 穿上雨衣，冒雨加速投遞！", action: (p) => {
+                    p.hp -= 15; p.satisfaction += 3;
+                    return "雖然渾身濕透非常辛苦，但你準時將信件送達！（體力 -15，滿意度 +3）";
+                }}
+            ]
+        }
+    ];
+
+    function startGame() {
+        player.name = document.getElementById("player-name").value || "無名郵務士";
+        player.trait = document.getElementById("player-trait").value;
+        if (player.trait === "stamina") { player.maxHp = 130; player.hp = 130; }
+
+        document.getElementById("setup-page").classList.add("hidden");
+        document.getElementById("game-page").classList.remove("hidden");
+        updateStatus();
+    }
+
+    function updateStatus() {
+        document.getElementById("stat-age").innerText = `${player.age}歲 (${player.role})`;
+        document.getElementById("stat-hp").innerText = `${player.hp}/${player.maxHp}`;
+        document.getElementById("stat-satis").innerText = `${player.satisfaction}分`;
+        document.getElementById("stat-eval").innerText = `${player.gradeA} 次`;
+    }
+
+    function startYear() {
+        if (player.age >= 65) { endGame(); return; }
+
+        document.getElementById("btn-main").classList.add("hidden");
+        document.getElementById("log-container").innerHTML = "";
+
+        // 隨機抽一個事件
+        let evt = events[Math.floor(Math.random() * events.length)];
+        document.getElementById("event-title").innerText = `📅 【${player.age} 歲】 ${evt.title}`;
+        document.getElementById("event-desc").innerText = evt.desc;
+
+        // 生成選項按鈕
+        let choicesHtml = "";
+        evt.options.forEach((opt, idx) => {
+            choicesHtml += `<button class="btn-choice" onclick="makeChoice(${Math.floor(Math.random() * events.length)}, ${idx})">${opt.text}</button>`;
+        });
+        
+        // 渲染該事件真正的選項
+        let container = document.getElementById("choices-container");
+        container.innerHTML = "";
+        evt.options.forEach((opt) => {
+            let btn = document.createElement("button");
+            btn.className = "btn-choice";
+            btn.innerText = opt.text;
+            btn.onclick = () => processChoice(opt);
+            container.appendChild(btn);
+        });
+    }
+
+    function processChoice(option) {
+        // 執行選項結果
+        let resultLog = option.action(player);
+        player.choicesMade++;
+        player.delivered += Math.floor(Math.random() * 5000 + 10000);
+
+        // 考績計算
+        let gradeOdds = 0.4 + (player.satisfaction / 200);
+        let evalLog = "";
+        if (Math.random() < gradeOdds) {
+            player.gradeA++;
+            evalLog = "<br>🌟 年末考績評比：<b>甲等</b>！";
+        } else {
+            evalLog = "<br>📦 年末考績評比：乙等。";
+        }
+
+        // 顯示結果
+        document.getElementById("choices-container").innerHTML = "";
+        document.getElementById("log-container").innerHTML = `<div class="log-box">${resultLog}${evalLog}</div>`;
+
+        // 年齡推進
+        player.age++;
+        player.hp = Math.min(player.maxHp, player.hp + 10); // 每年恢復體力
+        updateStatus();
+
+        // 恢復下一年按鈕
+        let mainBtn = document.getElementById("btn-main");
+        mainBtn.classList.remove("hidden");
+        if (player.age >= 65) {
+            mainBtn.innerText = "領取榮退紀念 (觀看生涯總結)";
+            mainBtn.onclick = endGame;
+        } else {
+            mainBtn.innerText = "推進到下一年";
+        }
+    }
+
+    function takeExam() {
+        if (player.examPassed) { alert("你已經是內勤囉！"); return; }
+        let rate = player.trait === "smart" ? 0.7 : 0.4;
+        if (Math.random() < rate) {
+            player.examPassed = true; player.role = "內勤郵務士";
+            document.getElementById("btn-exam").disabled = true;
+            document.getElementById("btn-exam").innerText = "✅ 已轉為內勤職";
+            alert("🎉 恭喜！你成功通過升遷考試，轉任內勤！");
+            updateStatus();
+        } else {
+            alert("❌ 差了一點點，明年再試試看！");
+        }
+    }
+
+    function endGame() {
+        document.getElementById("game-page").classList.add("hidden");
+        document.getElementById("result-page").classList.remove("hidden");
+
+        let title = "【默默耕耘的郵務老兵】";
+        if (player.gradeA >= 25) title = "【郵政傳奇楷模】";
+        if (player.dogBites === 0 && player.dogsEncountered >= 5) title = "【巷弄馴狗師】";
+        if (player.satisfaction >= 110) title = "【全民暖心郵務士】";
+
+        document.getElementById("summary-content").innerHTML = `
+            <b>姓名：</b> ${player.name}<br>
+            <b>終極榮譽稱號：</b> <span style="font-size:18px; color:#008751; font-weight:bold;">${title}</span><br>
+            <hr>
+            📮 <b>生涯處理郵件件數：</b> ${player.delivered.toLocaleString()} 件<br>
+            🏆 <b>累計考績甲等：</b> ${player.gradeA} 次<br>
+            ⭐ <b>最終民眾滿意度：</b> ${player.satisfaction} 分<br>
+            🐕 <b>遇犬次數 / 被咬次數：</b> ${player.dogsEncountered} 次 / ${player.dogBites} 次<br>
+            💼 <b>退休職務：</b> ${player.role}<br>
+            <hr>
+            <b>職涯評語：</b> 感謝你這 47 年來在郵務崗位上的付出與抉擇，祝你退休生活愉快！
+        `;
+    }
+</script>
+</body>
+</html>
