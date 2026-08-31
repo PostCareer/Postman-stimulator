@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>郵務人生模擬器 V3.5</title>
+    <title>郵務人生模擬器 V3.6</title>
     <style>
         :root {
             --green-main: #008751;
@@ -23,7 +23,7 @@
         h1 { color: var(--green-main); text-align: center; margin-top: 0; font-size: 22px; }
         
         .status-bar {
-            display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px;
+            display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px;
             background: #e8f5e9; padding: 10px; border-radius: 10px; margin-bottom: 12px;
             text-align: center; font-size: 13px;
         }
@@ -79,7 +79,7 @@
 <body>
 
 <div class="container">
-    <h1>📮 郵務人生模擬器 V3.5</h1>
+    <h1>📮 郵務人生模擬器 V3.6</h1>
 
     <!-- 階段 1：設定 -->
     <div id="setup-page">
@@ -92,22 +92,21 @@
             <input type="number" id="player-age" value="18" min="18" max="60">
         </div>
         <div class="setup-group">
-            <label for="player-code">選擇人生代號（初始路線與能力）：</label>
+            <label for="player-code">選擇天賦傾向（將隱藏至退休結算）：</label>
             <select id="player-code">
-                <option value="A">【代號 A：巷弄傳奇】高熟練/高人緣，專精外勤極速送件</option>
-                <option value="B">【代號 B：管理之星】高應變/向上管理，容易通過升遷考試</option>
-                <option value="C">【代號 C：鐵人郵務士】高體力，抗天氣災害與極端勤務</option>
+                <option value="A">【傾向 A】特化：路線熟練與人緣社交</option>
+                <option value="B">【傾向 B】特化：處事應變與向上管理</option>
+                <option value="C">【傾向 C】特化：體能強度與路線熟練</option>
             </select>
         </div>
-        <button class="btn-action" onclick="startGame()">開啟代號生涯！</button>
+        <button class="btn-action" onclick="startGame()">開啟生涯！</button>
     </div>
 
     <!-- 階段 2：主遊戲畫面 -->
     <div id="game-page" class="hidden">
         <div class="status-bar">
-            <div class="status-item">年齡/職務<span id="stat-age">18歲</span></div>
-            <div class="status-item">路線類型<span id="stat-code">代號 A</span></div>
-            <div class="status-item">考績甲等<span id="stat-eval">0 次</span></div>
+            <div class="status-item">年齡 / 當前職務<span id="stat-age">18歲</span></div>
+            <div class="status-item">考績甲等累計<span id="stat-eval">0 次</span></div>
         </div>
 
         <!-- 屬性加點面板 -->
@@ -155,7 +154,7 @@
         <h2>🏆 郵務生涯榮退報告</h2>
         <div id="summary-content" style="line-height: 1.8; background:#fff8e1; padding:15px; border-radius:10px;"></div>
         <br>
-        <button class="btn-action" onclick="location.reload()">重新體驗新代號</button>
+        <button class="btn-action" onclick="location.reload()">重新體驗新天賦</button>
     </div>
 </div>
 
@@ -187,7 +186,6 @@
 
     function updateUI() {
         document.getElementById("stat-age").innerText = `${player.age}歲 (${player.role})`;
-        document.getElementById("stat-code").innerText = `代號 ${player.code}`;
         document.getElementById("stat-eval").innerText = `${player.gradeA} 次`;
         document.getElementById("stat-points").innerText = player.points;
 
@@ -374,6 +372,12 @@
         document.getElementById("game-page").classList.add("hidden");
         document.getElementById("result-page").classList.remove("hidden");
 
+        let codeNameMap = {
+            "A": "【代號 A：巷弄人氣王】",
+            "B": "【代號 B：向上管理之星】",
+            "C": "【代號 C：鐵人郵務士】"
+        };
+
         let finalTitle = "【堅守崗位郵務員】";
         if (player.role.includes("半夜班")) {
             finalTitle = "【月台籃車殺手．夜行郵務傳說】";
@@ -386,9 +390,10 @@
         }
 
         document.getElementById("summary-content").innerHTML = `
-            <b>姓名：</b> ${player.name} (代號 ${player.code})<br>
+            <b>姓名：</b> ${player.name}<br>
             <b>開局設定：</b> ${player.startAge} 歲入職<br>
-            <b>最終稱號：</b> <span style="font-size:18px; color:#008751; font-weight:bold;">${finalTitle}</span><br>
+            <b>揭曉初始代號：</b> <span style="color:#0288d1; font-weight:bold;">${codeNameMap[player.code]}</span><br>
+            <b>最終生涯稱號：</b> <span style="font-size:18px; color:#008751; font-weight:bold;">${finalTitle}</span><br>
             <hr>
             📊 <b>最終能力總結：</b><br>
             - 體能: ${player.stats.stamina} / 熟練: ${player.stats.route} / 向上管理: ${player.stats.management} / 應變: ${player.stats.smart} / 人緣: ${player.stats.relationship}<br>
