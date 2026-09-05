@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>郵差人生模擬器 V4.4</title>
+    <title>郵差人生模擬器 V4.5</title>
     <style>
         :root {
             --green-main: #008751;
@@ -61,9 +61,7 @@
             padding: 12px; font-size: 15px; font-weight: bold; border-radius: 8px; cursor: pointer; margin-bottom: 8px;
         }
         .btn-exam { background-color: #0288d1; }
-        .btn-exam:disabled { background-color: #b0bec5; cursor: not-allowed; }
         .btn-job { background-color: #f57c00; }
-        .btn-job:disabled { background-color: #b0bec5; cursor: not-allowed; }
 
         .setup-group { margin-bottom: 12px; }
         label { display: block; margin-bottom: 4px; font-weight: bold; font-size: 14px; }
@@ -81,12 +79,16 @@
             padding: 10px; margin-bottom: 12px;
         }
         .job-title { font-weight: bold; font-size: 14px; color: #e65100; margin-bottom: 6px; }
+        .opportunity-notice {
+            background: #e1f5fe; border: 1px solid #81d4fa; border-radius: 6px;
+            padding: 8px; margin-bottom: 8px; font-size: 12px; color: #0277bd;
+        }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h1>📮 郵差人生模擬器 V4.4</h1>
+    <h1>📮 郵差人生模擬器 V4.5</h1>
 
     <!-- 階段 1：設定 -->
     <div id="setup-page">
@@ -161,13 +163,14 @@
 
         <button id="btn-main" class="btn-action" onclick="startYear()">進行今年業務</button>
 
-        <!-- 特殊職務競爭與升遷區域 -->
-        <div class="job-section">
-            <div class="job-title">🏆 特殊職務競爭與升遷（須任職滿 3 年）</div>
-            <button id="btn-job-day" class="btn-action btn-job" onclick="applyJob('白天接送收攬')">☀️ 參與內部競爭：白天接送收攬</button>
-            <button id="btn-job-night" class="btn-action btn-job" onclick="applyJob('半夜接送收攬')">🌙 參與內部競爭：半夜接送收攬</button>
-            <button id="btn-job-inspector" class="btn-action btn-job" onclick="applyJob('郵務稽查')">🔍 參與內部競爭：郵務稽查</button>
-            <button id="btn-exam" class="btn-action btn-exam" onclick="takeExam()">📝 參加內部升遷考試（轉內勤）</button>
+        <!-- 特殊職務競爭與升遷區域（動態出現） -->
+        <div class="job-section hidden" id="job-section">
+            <div class="job-title">🏆 今年出現的特殊職務/升遷機會！</div>
+            <div id="opportunity-notice" class="opportunity-notice"></div>
+            <button id="btn-job-night" class="btn-action btn-job hidden" onclick="applyJob('半夜接送收攬')">🌙 競逐職缺：半夜接送收攬（門檻滿5年）</button>
+            <button id="btn-job-day" class="btn-action btn-job hidden" onclick="applyJob('白天接送收攬')">☀️ 競逐職缺：白天接送收攬（門檻滿10年）</button>
+            <button id="btn-job-inspector" class="btn-action btn-job hidden" onclick="applyJob('郵務稽查')">🔍 競逐職缺：郵務稽查（門檻滿15年）</button>
+            <button id="btn-exam" class="btn-action btn-exam hidden" onclick="takeExam()">📝 參加內部升遷考試（3年一度大考）</button>
         </div>
     </div>
 
@@ -258,7 +261,7 @@
                         changes: { stamina: 1, route: 1 }, addPoints: 1, grade: true
                     },
                     {
-                        text: "b) 立即聯繫局內調派大貨車或二班支援",
+                        text: "b) 買上聯繫局內調派大貨車或二班支援",
                         result: "展現優異的應變調度，雖然多花了一點時間溝通，但安全且順利完成任務。",
                         changes: { smart: 2, management: 1 }, addPoints: 1, grade: false
                     }
@@ -326,7 +329,7 @@
                         changes: { relationship: 2, management: 2 }, addPoints: 1, grade: true
                     },
                     {
-                        text: "b) 了解原委後，拿出相關規定公事公辦解釋並幫同仁坦傷害",
+                        text: "b) 瞭解原委後，拿出相關規定公事公辦解釋並幫同仁坦傷害",
                         result: "雖然民眾離去時仍有怨言，但你成功維護了局內同仁的尊嚴與立場，獲得基層同仁好感！",
                         changes: { relationship: 2, smart: 1 }, addPoints: 1, grade: false
                     }
@@ -407,19 +410,63 @@
             if (btn) btn.disabled = (player.points <= 0 || player.stats[key] >= MAX_STAT);
         }
 
-        let unlock = player.age >= (player.startAge + 3);
+        checkCareerOpportunities();
+    }
+
+    // 檢查並動態顯示今年可競爭的職務或升遷考試
+    function checkCareerOpportunities() {
+        let yearsOfService = player.age - player.startAge;
+        let jobSection = document.getElementById("job-section");
+        let noticeBox = document.getElementById("opportunity-notice");
         
-        let examBtn = document.getElementById("btn-exam");
-        if (player.examPassed) {
-            examBtn.disabled = true;
-            examBtn.innerText = "✅ 已參加過升遷考試";
-        } else {
-            examBtn.disabled = !unlock;
+        let btnNight = document.getElementById("btn-job-night");
+        let btnDay = document.getElementById("btn-job-day");
+        let btnInspector = document.getElementById("btn-job-inspector");
+        let btnExam = document.getElementById("btn-exam");
+
+        // 先預設全部隱藏
+        btnNight.classList.add("hidden");
+        btnDay.classList.add("hidden");
+        btnInspector.classList.add("hidden");
+        btnExam.classList.add("hidden");
+
+        let availableNotice = [];
+
+        // 1. 升遷考試：3年一個循環，且沒考過
+        if (yearsOfService > 0 && yearsOfService % 3 === 0 && !player.examPassed) {
+            btnExam.classList.remove("hidden");
+            availableNotice.push("📝 總公司舉辦 3 年一度的內部升遷大考，可報考轉內勤！");
         }
 
-        document.getElementById("btn-job-day").disabled = !unlock;
-        document.getElementById("btn-job-night").disabled = !unlock;
-        document.getElementById("btn-job-inspector").disabled = !unlock;
+        // 隨機缺額觸發（隨機種子基於年份）
+        let rngNight = Math.random();
+        let rngDay = Math.random();
+        let rngInspector = Math.random();
+
+        // 2. 半夜接送收攬：門檻 5 年，40% 機率有退休缺
+        if (yearsOfService >= 5 && player.role !== "半夜接送收攬" && rngNight < 0.40) {
+            btnNight.classList.remove("hidden");
+            availableNotice.push("🌙 局內『半夜接送收攬』有前輩退休，開出空缺！");
+        }
+
+        // 3. 白天接送收攬：門檻 10 年，35% 機率有退休缺
+        if (yearsOfService >= 10 && player.role !== "白天接送收攬" && rngDay < 0.35) {
+            btnDay.classList.remove("hidden");
+            availableNotice.push("☀️ 局內『白天接送收攬』有前輩退休，開出空缺！");
+        }
+
+        // 4. 郵務稽查：門檻 15 年，25% 機率有退休缺
+        if (yearsOfService >= 15 && player.role !== "郵務稽查" && rngInspector < 0.25) {
+            btnInspector.classList.remove("hidden");
+            availableNotice.push("🔍 局內『郵務稽查』有大老榮退，開放競爭！");
+        }
+
+        if (availableNotice.length > 0) {
+            jobSection.classList.remove("hidden");
+            noticeBox.innerHTML = availableNotice.join("<br>");
+        } else {
+            jobSection.classList.add("hidden");
+        }
     }
 
     function addPoint(statKey) {
