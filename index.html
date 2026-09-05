@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>郵務人生模擬器 V4.0</title>
+    <title>郵差人生模擬器 V4.0</title>
     <style>
         :root {
             --green-main: #008751;
@@ -83,7 +83,7 @@
 <body>
 
 <div class="container">
-    <h1>📮 郵務人生模擬器 V4.0</h1>
+    <h1>📮 郵差人生模擬器 V4.0</h1>
 
     <!-- 階段 1：設定 -->
     <div id="setup-page">
@@ -171,7 +171,7 @@
 
     <!-- 階段 3：退休/通關結算 -->
     <div id="result-page" class="hidden">
-        <h2 id="result-header">🏆 郵務生涯榮退報告</h2>
+        <h2 id="result-header">🏆 郵差生涯榮退報告</h2>
         <div id="summary-content" style="line-height: 1.8; background:#fff8e1; padding:15px; border-radius:10px;"></div>
         <br>
         <button class="btn-action" onclick="location.reload()">重新體驗新天賦</button>
@@ -191,7 +191,6 @@
 
     const MAX_STAT = 20;
 
-    // 分段與半夜班專屬事件庫（已新增你指定的混投段事件）
     const roleEvents = {
         "混投段": [
             {
@@ -327,7 +326,6 @@
         ]
     };
 
-    // 🌙 專屬「半夜班外勤」夜間事件庫
     const nightEventPool = [
         {
             title: "🚚 夜班大司機的體味嫌棄",
@@ -464,7 +462,7 @@
         if (opt.changes) {
             for (let key in opt.changes) {
                 player.stats[key] += opt.changes[key];
-                let nameMap = { stamina: "體能", route: "路線", management: "向上管理", smart: "處事應变", relationship: "人緣" };
+                let nameMap = { stamina: "體能", route: "路線", management: "向上管理", smart: "處事應變", relationship: "人緣" };
                 let valStr = opt.changes[key] > 0 ? `+${opt.changes[key]}` : `${opt.changes[key]}`;
                 changeLogs.push(`${nameMap[key]} ${valStr}`);
             }
