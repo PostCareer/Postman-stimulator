@@ -195,6 +195,54 @@
     const roleEvents = {
         "混投段": [
             {
+    title: "📜 消失的門牌與無名掛號",
+    desc: "你手上有張催繳稅單掛號，地址寫著「100號」，但現場100號因為幾年前拆遷變成空地，旁邊只有102號住戶在看電視。",
+    options: [
+        {
+            text: "a) 開立招領單投遞至102號信箱，走標準流程",
+            result: "流程完全合規！雖然民眾要多跑一趟郵局領信，但幫自己省去投遞爭議與責任。",
+            changes: { smart: 1 }, addPoints: 1, grade: false
+        },
+        {
+            text: "b) 主動開口問102號住戶，幫忙聯繫原屋主",
+            result: "鄰居阿姨熱心幫你打給原屋主！信件成功簽收，住戶直誇郵差真有耐心，獲得熱心口碑！",
+            changes: { relationship: 2, route: 1 }, addPoints: 1, grade: true
+        }
+    ]
+},
+{
+    title: "🐝 住宅區巷弄的黃蜂危機",
+    desc: "在送信途中，你發現某戶三樓信箱旁的樹枝上有個籃球大的胡蜂巢，而且信箱就在正下方！",
+    options: [
+        {
+            text: "a) 展現快手功力，快速丟完信件火速騎走",
+            result: "雖然沒被螫到，但險象環生，心跳直接飆到180，嚇掉半條命。",
+            changes: { stamina: 1, smart: -1 }, addPoints: 0, grade: false
+        },
+        {
+            text: "b) 拍照回報稽查，並貼溫馨提醒貼紙至巷口",
+            result: "里長大讚你的警覺心並立刻找消防隊處理，鄰居紛紛感謝你救了大家！",
+            changes: { relationship: 2, management: 1 }, addPoints: 1, grade: true
+        }
+    ]
+},
+{
+    title: "🧧 老阿嬤的溫暖紅包",
+    desc: "大熱天送掛號到老舊公寓，獨居的獨眼老阿嬤開門拿了信後，堅持要塞一罐冰麥仔茶跟100元紅包給你喝水。",
+    options: [
+        {
+            text: "a) 堅決婉拒紅包，只拿麥仔茶並鞠躬致謝",
+            result: "展現了廉潔與親切！老阿嬤到處跟鄰居誇獎你，人緣度大提升！",
+            changes: { relationship: 2, smart: 1 }, addPoints: 1, grade: true
+        },
+        {
+            text: "b) 嚴肅拒絕並宣導公務人員公務員廉政倫理規範",
+            result: "阿嬤被你的嚴肅嚇到了，場面一度極度尷尬...",
+            changes: { relationship: -1, management: 1 }, addPoints: 0, grade: false
+        }
+    ]
+}
+            {
                 title: "📮 混投段：門牌混亂與凶惡惡犬",
                 desc: "今天送到老舊巷弄，門牌亂七八糟，甚至還有一隻沒繫繩的黑狗衝出來！",
                 options: [
