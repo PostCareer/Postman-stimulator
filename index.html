@@ -301,6 +301,54 @@
                     }
                 ]
             }
+       {
+            title: "🐕 經典危機：巷弄惡犬突襲",
+            desc: "正在專心找信箱時，轉角突然衝出一隻沒拴繩的大黑狗，對著你的小腿狂吠作勢要咬！",
+            options: [
+                {
+                    text: "a) 展現氣魄！大聲喝斥並用郵務車擋住",
+                    result: "你氣勢如虹，成功把狗嚇退！住戶看到你的英勇表現連連道歉，但稍微耽誤了送件時間。",
+                    changes: { stamina: 1, route: -1 }, addPoints: 0, grade: false
+                },
+                {
+                    text: "b) 戰術性撤退，掏出隨身準備的狗零食",
+                    result: "黑狗瞬間變成乖狗狗。你成功收買了這條巷子的「老大」，以後來送信再也沒被咬過，人緣與應變提升！",
+                    changes: { smart: 1, relationship: 1 }, addPoints: 1, grade: true
+                }
+            ]
+        },
+        {
+            title: "🤬 奧客降臨：無厘頭客訴",
+            desc: "有民眾打客服投訴你：「那個郵差送信時看了我一眼，眼神很不友善！」稽查無奈地把你叫去問話。",
+            options: [
+                {
+                    text: "a) 據理力爭，跟稽查拍桌抱怨民眾太瞎",
+                    result: "稽查被你噴得啞口無言，雖然同事在背後為你叫好，但長官覺得你難以管理。",
+                    changes: { relationship: 1, management: -2 }, addPoints: 0, grade: false
+                },
+                {
+                    text: "b) 委曲求全，寫一份完美的制式報告交差",
+                    result: "你熟練地寫出滿篇官話的報告，成功幫長官擋下麻煩。稽查對你的「大局觀」十分讚賞！",
+                    changes: { management: 2, smart: 1 }, addPoints: 1, grade: true
+                }
+            ]
+        },
+        {
+            title: "🏘️ 迷航危機：新建案重劃區",
+            desc: "今天代班跑一個全新重劃區的混投段，門牌跳號嚴重，導航完全找不到，信件還剩一大疊！",
+            options: [
+                {
+                    text: "a) 靠直覺硬繞，發揮土法煉鋼精神",
+                    result: "你在太陽下多繞了兩小時才送完，累得半死，但把這區的路線徹底刻進腦海裡了！",
+                    changes: { stamina: -1, route: 2 }, addPoints: 0, grade: false
+                },
+                {
+                    text: "b) 停下來詢問當地的房屋仲介跟管理員",
+                    result: "你發揮社交天賦，跟管理員大哥抽根菸請教。不僅秒懂門牌邏輯，還順便建立了良好關係！",
+                    changes: { relationship: 1, route: 1 }, addPoints: 1, grade: true
+                }
+            ]
+        }
         ],
         "快捷包裹段": [
             {
@@ -319,6 +367,34 @@
                     }
                 ]
             }
+            title: "📦 體能考驗：無電梯公寓的礦泉水",
+            desc: "今天快捷包裹有一件送到 5 樓（無電梯）的 3 箱重磅礦泉水，客戶在家但不願意下樓拿。",
+            options: [
+                {
+                    text: "a) 郵務士的尊嚴！一口氣扛上五樓",
+                    result: "你咬牙一次扛上去，到了五樓差點往生。雖然客戶很滿意，但你的膝蓋跟腰發出悲鳴...",
+                    changes: { stamina: 2, smart: -1 }, addPoints: 0, grade: false
+                },
+                {
+                    text: "b) 智慧應對，打電話請客戶幫忙搬一半",
+                    result: "你用誠懇（帶點威脅）的語氣說服客戶下樓分擔。保住了腰，但客戶碎碎唸了一下，稍微影響考績潛力。",
+                    changes: { smart: 1, management: -1 }, addPoints: 1, grade: false
+                } {
+            title: "🤬 奧客降臨：無厘頭客訴",
+            desc: "有民眾打客服投訴你：「那個郵差送信時看了我一眼，眼神很不友善！」稽查無奈地把你叫去問話。",
+            options: [
+                {
+                    text: "a) 據理力爭，跟稽查拍桌抱怨民眾太瞎",
+                    result: "稽查被你噴得啞口無言，雖然同事在背後為你叫好，但長官覺得你難以管理。",
+                    changes: { relationship: 1, management: -2 }, addPoints: 0, grade: false
+                },
+                {
+                    text: "b) 委曲求全，寫一份完美的制式報告交差",
+                    result: "你熟練地寫出滿篇官話的報告，成功幫長官擋下麻煩。稽查對你的「大局觀」十分讚賞！",
+                    changes: { management: 2, smart: 1 }, addPoints: 1, grade: true
+                }
+            ]
+        },
         ],
         "半夜接送收攬": [
             {
