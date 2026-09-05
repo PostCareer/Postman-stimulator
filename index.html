@@ -283,25 +283,25 @@
     }
 
     // 職務與對應專屬事件庫
-    const roleEvents = {
-        "混投段": [
-            {
-                title: "📮 混投段：門牌混亂與凶惡惡犬",
-                desc: "今天送到老舊巷弄，門牌亂七八糟，甚至還有一隻沒繫繩的黑狗衝出來！",
-                options: [
-                    {
-                        text: "a) 拿郵件包擋住，冷靜慢慢後退",
-                        result: "順利避開咬傷，展現良好應變能力。",
-                        changes: { smart: 1 }, addPoints: 1, grade: true
-                    },
-                    {
-                        text: "b) 大聲跟住戶求救並反應路段狀況",
-                        result: "熱心鄰居出來幫忙拉住狗，順便指引正確門牌，人緣提升！",
-                        changes: { relationship: 1 }, addPoints: 1, grade: false
-                    }
-                ]
-            }
-       {
+   const roleEvents = {
+    "混投段": [
+        {
+            title: "📮 混投段：門牌混亂與凶惡惡犬",
+            desc: "今天送到老舊巷弄，門牌亂七八糟，甚至還有一隻沒繫繩的黑狗衝出來！",
+            options: [
+                {
+                    text: "a) 拿郵件包擋住，冷靜慢慢後退",
+                    result: "順利避開咬傷，展現良好應變能力。",
+                    changes: { smart: 1 }, addPoints: 1, grade: true
+                },
+                {
+                    text: "b) 大聲跟住戶求救並反應路段狀況",
+                    result: "熱心鄰居出來幫忙拉住狗，順便指引正確門牌，人緣提升！",
+                    changes: { relationship: 1 }, addPoints: 1, grade: false
+                }
+            ]
+        },
+        {
             title: "🐕 經典危機：巷弄惡犬突襲",
             desc: "正在專心找信箱時，轉角突然衝出一隻沒拴繩的大黑狗，對著你的小腿狂吠作勢要咬！",
             options: [
@@ -349,24 +349,9 @@
                 }
             ]
         }
-        ],
-        "快捷包裹段": [
-            {
-                title: "📦 快捷包裹段：電梯故障硬扛重物",
-                desc: "頂樓住戶訂了 3 箱礦泉水，偏偏公寓完全沒有電梯！",
-                options: [
-                    {
-                        text: "a) 硬扛一口氣扛上五樓！",
-                        result: "累到滿頭大汗，但體能大幅提升，客人給予讚賞！",
-                        changes: { stamina: 1 }, addPoints: 1, grade: true
-                    },
-                    {
-                        text: "b) 電聯收件人詢問是否能下樓協助",
-                        result: "收件人體諒辛苦下來幫忙拿了一箱，應變加分。",
-                        changes: { smart: 1 }, addPoints: 0, grade: false
-                    }
-                ]
-            }
+    ],
+    "快捷包裹段": [
+        {
             title: "📦 體能考驗：無電梯公寓的礦泉水",
             desc: "今天快捷包裹有一件送到 5 樓（無電梯）的 3 箱重磅礦泉水，客戶在家但不願意下樓拿。",
             options: [
@@ -379,7 +364,10 @@
                     text: "b) 智慧應對，打電話請客戶幫忙搬一半",
                     result: "你用誠懇（帶點威脅）的語氣說服客戶下樓分擔。保住了腰，但客戶碎碎唸了一下，稍微影響考績潛力。",
                     changes: { smart: 1, management: -1 }, addPoints: 1, grade: false
-                } {
+                }
+            ]
+        },
+        {
             title: "🤬 奧客降臨：無厘頭客訴",
             desc: "有民眾打客服投訴你：「那個郵差送信時看了我一眼，眼神很不友善！」稽查無奈地把你叫去問話。",
             options: [
@@ -394,7 +382,9 @@
                     changes: { management: 2, smart: 1 }, addPoints: 1, grade: true
                 }
             ]
-        },
+        }
+    ]
+};
         ],
         "半夜接送收攬": [
             {
