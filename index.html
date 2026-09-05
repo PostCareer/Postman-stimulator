@@ -170,9 +170,9 @@
         <div class="job-section hidden" id="job-section">
             <div class="job-title">🏆 今年出現的特殊職務/升遷機會！</div>
             <div id="opportunity-notice" class="opportunity-notice"></div>
-            <button id="btn-job-night" class="btn-action btn-job hidden" onclick="applyJob('半夜接送收攬')">🌙 競逐職缺：半夜接送收攬（門檻滿5年）</button>
-            <button id="btn-job-day" class="btn-action btn-job hidden" onclick="applyJob('白天接送收攬')">☀️ 競逐職缺：白天接送收攬（門檻滿10年）</button>
-            <button id="btn-job-inspector" class="btn-action btn-job hidden" onclick="applyJob('郵務稽查')">🔍 競逐職缺：郵務稽查（門檻滿15年）</button>
+            <button id="btn-job-night" class="btn-action btn-job hidden" onclick="applyJob('半夜接送收攬')">🌙 競逐職缺：半夜接送收攬</button>
+            <button id="btn-job-day" class="btn-action btn-job hidden" onclick="applyJob('白天接送收攬')">☀️ 競逐職缺：白天接送收攬</button>
+            <button id="btn-job-inspector" class="btn-action btn-job hidden" onclick="applyJob('郵務稽查')">🔍 競逐職缺：郵務稽查</button>
             <button id="btn-exam" class="btn-action btn-exam hidden" onclick="takeExam()">📝 參加內部升遷考試（3年一度大考）</button>
         </div>
     </div>
@@ -400,12 +400,12 @@
             availableNotice.push("🌙 局內『半夜接送收攬』有空缺！");
         }
 
-        if (yearsOfService >= 10 && player.role !== "白天接送收攬" && Math.random() < 0.35) {
+        if (yearsOfService >= 10 && player.role !== "白天接送收攬" && Math.random() < 0.24) {
             btnDay.classList.remove("hidden");
             availableNotice.push("☀️ 局內『白天接送收攬』有空缺！");
         }
 
-        if (yearsOfService >= 15 && player.role !== "郵務稽查" && Math.random() < 0.25) {
+        if (yearsOfService >= 15 && player.role !== "郵務稽查" && Math.random() < 0.30) {
             btnInspector.classList.remove("hidden");
             availableNotice.push("🔍 局內『郵務稽查』開放競爭！");
         }
