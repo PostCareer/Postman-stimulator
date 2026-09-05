@@ -186,26 +186,139 @@
         delivered: 0, gradeA: 0,
         examPassed: false,
         isNightShiftUnlocked: false,
-        isNightShift: false
+        isNightShift: false,
+        isFired: false,
+        firedReason: ""
     };
 
     const MAX_STAT = 20;
 
+    // 通用事件池（快捷/混投都有機會遇到）
+    const commonEvents = [
+        {
+            title: "🌧️ 突如其來的暴雨考驗",
+            desc: "送信送（或快捷包裹）到一半突然下起傾盆大雨！但你發現自己沒帶雨衣也沒帶浴帽，信件跟包裹快要濕掉了！",
+            options: [
+                {
+                    text: "a) 硬著頭皮送完！",
+                    result: "你被淋得像落湯雞，信件濕答答被民眾投訴，隔天還感冒發高燒退勤...",
+                    changes: { stamina: -2, relationship: -1 }, addPoints: 0, grade: false
+                },
+                {
+                    text: "b) 請求稽查支援！",
+                    result: "稽查拿著雨衣前來救援，雖然被酸了兩句『沒看氣象預報喔』，但成功保住了信件與身體！",
+                    changes: { smart: 1, management: -1 }, addPoints: 1, grade: false
+                },
+                {
+                    text: "c) 把車子推進水溝，一了百了！",
+                    result: "你對著水溝大喊：『我不幹啦！』車子泡水毀損，被局裡開懲處檢討會並列入重點觀察對象！",
+                    changes: { management: -5, relationship: -3, smart: -3 }, addPoints: 0, grade: false
+                }
+            ]
+        },
+        {
+            title: "📲 LINE 社交地獄爆發",
+            desc: "午休手機滑太爽，不小心把私下的『約砲訊息』誤傳到郵局大群組（內有局長、稽查與全體同事）！",
+            options: [
+                {
+                    text: "a) 按下『刪除』（只有自己看不到）",
+                    result: "慘了！你按到刪除，全群組幾百個人都看到了，成為局內傳奇社會性死亡代表！",
+                    changes: { management: -4, relationship: -4 }, addPoints: 0, grade: false
+                },
+                {
+                    text: "b) 手速極快秒按『收回』，並補一句『帳號被盜/好友傳錯』",
+                    result: "雖然有幾個人看到，但你死不承認！靠著極強的心理素質撐過去了，大家心照不宣。",
+                    changes: { smart: 2, management: -1 }, addPoints: 1, grade: false
+                }
+            ]
+        },
+        {
+            title: "🏥 身體發出警訊！",
+            desc: "長期扛重物加上腰椎勞損，醫生檢查後嚴肅警告你：『這個必須馬上動手術，不然會癱瘓！』",
+            options: [
+                {
+                    text: "a) 聽醫生話，馬上辦理請假動手術",
+                    result: "手術順利！雖然休養了一段時間耽誤考績，但保住了健康的脊椎與後半生體能。",
+                    changes: { stamina: 3, route: -1 }, addPoints: 1, grade: false
+                },
+                {
+                    text: "b) 不去醫院，在家休息吃止痛藥硬撐",
+                    result: "止痛藥越吃越重，病情惡化，出勤時腰痛到起不來，體能急遽下滑！",
+                    changes: { stamina: -4, smart: -1 }, addPoints: 0, grade: false
+                }
+            ]
+        },
+        {
+            title: "🚲 雷殘請工傷，稽查的召喚",
+            desc: "你在送信時雷殘腳嚴重拉傷，請了工傷假。結果稽查打電話來：『局裡人力不夠，共體時艱出來上班啦！』",
+            options: [
+                {
+                    text: "a) 吞下去，答應出來上班！",
+                    result: "結果舊傷復發變嚴重關節炎！你忍無可忍，直接找勞檢處跟律師怒告郵局違反勞基法！局裡雞飛狗跳！",
+                    changes: { stamina: -3, management: -5, relationship: 2 }, addPoints: 1, grade: false
+                },
+                {
+                    text: "b) 死都不去！堅持休滿，過後申請轉調他局",
+                    result: "你拍拍屁股轉調到鄰局，帶著『擺爛大師』的的名聲繼續在別局搞事開展新人生！",
+                    changes: { management: -3, smart: 2 }, addPoints: 1, grade: false
+                }
+            ]
+        },
+        {
+            title: "😍 郵務窗口的超絕正妹",
+            desc: "一位顏值媲美明星的妹子來郵局領掛號，你看到心頭一震，此時你的內心小劇場開始作祟...",
+            options: [
+                {
+                    text: "a) 拿出手機默默偷拍",
+                    result: "被正妹當場抓包喊『有變態！』直接報警處理！你被記大過並全局通報！",
+                    changes: { management: -4, relationship: -4 }, addPoints: 0, grade: false
+                },
+                {
+                    text: "b) 偷看招領單上的住址與名字記錄下來",
+                    result: "雖然沒被發現，但你私下肉搜加好友被對方檢舉侵害個人資料，遭到長官嚴厲告誡！",
+                    changes: { smart: -2, management: -2 }, addPoints: 0, grade: false
+                },
+                {
+                    text: "c) 貪婪心爆發：偷拍 + 記住址『我要全部！』",
+                    result: "違規行為太誇張被民眾直接告上總公司！性騷擾成立，移送法辦，你直接被免職開除！",
+                    triggerFire: true, fireReason: "因犯下嚴重個資法與性騷擾案件，遭到郵局直接免職開除！"
+                }
+            ]
+        },
+        {
+            title: "📜 忘記繳回的投遞回執",
+            desc: "下班整理郵包時，突然發現口袋裡有一張今天掛號的『投遞回執』忘記繳回辦公室...",
+            options: [
+                {
+                    text: "a) 趕緊跑回辦公室補繳並向稽查致歉",
+                    result: "雖然被稽查口頭唸了兩句，但展現了負責的態度，順利補救合規！",
+                    changes: { management: 1, smart: 1 }, addPoints: 1, grade: true
+                },
+                {
+                    text: "b) 直接放進機車廂，假裝沒這回事！",
+                    result: "過幾天寄件人跑來查件發現沒有回執，稽查開查，你被記申誡處分，考績直接泡湯！",
+                    changes: { management: -3, smart: -2 }, addPoints: 0, grade: false
+                }
+            ]
+        }
+    ];
+
     const roleEvents = {
         "混投段": [
+            ...commonEvents,
             {
-                title: "📜 消失的門牌與無名掛號",
-                desc: "你手上有張催繳稅單掛號，地址寫著「100號」，但現場100號因為幾年前拆遷變成空地，旁邊只有102號住戶在看電視。",
+                title: "📜 訴訟文書與神秘住戶",
+                desc: "送信送（混投）到一半，住戶突然衝出來氣沖沖問你：『郵差！你有沒有我的訴訟文書（法院信件）？』",
                 options: [
                     {
-                        text: "a) 開立招領單投遞至102號信箱，走標準流程",
-                        result: "流程完全合規！雖然民眾要多跑一趟郵局領信，但幫自己省去投遞爭議與責任。",
-                        changes: { smart: 1 }, addPoints: 1, grade: false
+                        text: "a) 說沒有，然後轉身直接把訴訟信送到他家信箱",
+                        result: "住戶回頭看到信箱有信，怒飆你欺騙他，立刻打 0800 專線把你投訴爆！",
+                        changes: { relationship: -2, management: -1 }, addPoints: 0, grade: false
                     },
                     {
-                        text: "b) 主動開口問102號住戶，幫忙聯繫原屋主",
-                        result: "鄰居阿姨熱心幫你打給原屋主！信件成功簽收，住戶直誇郵差真有耐心，獲得熱心口碑！",
-                        changes: { relationship: 2, route: 1 }, addPoints: 1, grade: true
+                        text: "b) 說有，並直接拿給他簽收",
+                        result: "結果對方吸毒理智不清，接過信後突然狂暴化，把你當成法院派來的抓他的人，把你揍了一頓！",
+                        changes: { stamina: -3, smart: -1 }, addPoints: 0, grade: false
                     }
                 ]
             },
@@ -224,57 +337,31 @@
                         changes: { relationship: 2, management: 1 }, addPoints: 1, grade: true
                     }
                 ]
-            },
-            {
-                title: "🧧 老阿嬤的溫暖紅包",
-                desc: "大熱天送掛號到老舊公寓，獨居的獨眼老阿嬤開門拿了信後，堅持要塞一罐冰麥仔茶跟100元紅包給你喝水。",
-                options: [
-                    {
-                        text: "a) 堅決婉拒紅包，只拿麥仔茶並鞠躬致謝",
-                        result: "展現了廉潔與親切！老阿嬤到處跟鄰居誇獎你，人緣度大提升！",
-                        changes: { relationship: 2, smart: 1 }, addPoints: 1, grade: true
-                    },
-                    {
-                        text: "b) 嚴肅拒絕並宣導公務人員公務員廉政倫理規範",
-                        result: "阿嬤被你的嚴肅嚇到了，場面一度極度尷尬...",
-                        changes: { relationship: -1, management: 1 }, addPoints: 0, grade: false
-                    }
-                ]
-            },
-            {
-                title: "🐕 經典危機：巷弄惡犬突襲",
-                desc: "正在專心找信箱時，轉角突然衝出一隻沒拴繩的大黑狗，對著你的小腿狂吠作勢要咬！",
-                options: [
-                    {
-                        text: "a) 展現氣魄！大聲喝斥並用郵務車擋住",
-                        result: "你氣勢如虹，成功把狗嚇退！住戶看到你的英勇表現連連道歉，但稍微耽誤了送件時間。",
-                        changes: { stamina: 1, route: -1 }, addPoints: 0, grade: false
-                    },
-                    {
-                        text: "b) 戰術性撤退，掏出隨身準備的狗零食",
-                        result: "黑狗瞬間變成乖狗狗。你成功收買了這條巷子的「老大」，以後來送信再也沒被咬過！",
-                        changes: { smart: 1, relationship: 1 }, addPoints: 1, grade: true
-                    }
-                ]
-            },
-            {
-                title: "🌧️ 颱風天前的郵務總動員",
-                desc: "颱風即將登陸，局長下令今天要把所有平信與掛號「清班」，大家都面露難色。",
-                options: [
-                    {
-                        text: "a) 主動承擔多餘路段，幫忙體力不支的資深同事",
-                        result: "你成為局裡的熱心擔當！同事們無不感激，長官也默默記上記錄。",
-                        changes: { relationship: 2, stamina: 1 }, addPoints: 1, grade: true
-                    },
-                    {
-                        text: "b) 按部就班送完自己的責任區，不貪多也不拖延",
-                        result: "穩定輸出，平安歸隊，展現了良好的自我管理能力。",
-                        changes: { smart: 1, route: 1 }, addPoints: 0, grade: false
-                    }
-                ]
             }
         ],
         "快捷包裹段": [
+            ...commonEvents,
+            {
+                title: "🥮 中秋節包裹量暴增危機",
+                desc: "中秋節到了，月餅柚子包裹量暴增三倍！資深同事紛紛提早排休，現場只剩你跟口臭極度嚴重的稽查在現場...",
+                options: [
+                    {
+                        text: "a) 準時下班！明天的事交給明天的我",
+                        result: "稽查對著你噴著口臭大罵：『沒有團隊精神！』但你頭也不回地打卡下班，身心愉快！",
+                        changes: { management: -2, smart: 2 }, addPoints: 1, grade: false
+                    },
+                    {
+                        text: "b) 任勞任怨，忍著口臭與高壓加班送到完",
+                        result: "你送到半夜十二點，雖然被稽查臭氣薰得頭暈，但長官極度欣賞你的任勞任怨，考績甲等拿到手！",
+                        changes: { stamina: -2, management: 2 }, addPoints: 1, grade: true
+                    },
+                    {
+                        text: "c) 擺爛！沒去的包裹直接按『按址安排投遞』",
+                        result: "隔天投訴電話爆滿，民眾怒飆沒看到人就被按投遞失敗，稽查把你叫進辦公室臭幹一頓！",
+                        changes: { management: -3, relationship: -3 }, addPoints: 0, grade: false
+                    }
+                ]
+            },
             {
                 title: "📦 體能考驗：無電梯公寓的礦泉水",
                 desc: "今天快捷包裹有一件送到 5 樓（無電梯）的 3 箱重磅礦泉水，客戶在家但不願意下樓拿。",
@@ -288,38 +375,6 @@
                         text: "b) 智慧應對，打電話請客戶幫忙搬一半",
                         result: "你用誠懇的語氣說服客戶下樓分擔。保住了腰，但客戶碎碎唸了一下。",
                         changes: { smart: 1, management: -1 }, addPoints: 1, grade: false
-                    }
-                ]
-            },
-            {
-                title: "🚚 車頂過高危機！地下室極限挑戰",
-                desc: "這件快捷包裹註明要送進商辦地下室卸貨區，但地下室限高只有1.9公尺，你的車頂載物後好像有點危險...",
-                options: [
-                    {
-                        text: "a) 憑感覺跟駕駛技術，一口氣衝進去！",
-                        result: "咔啦！車頂冷氣孔直接撞到消防管道！賠錢事小，報告寫不完...",
-                        changes: { stamina: -1, management: -2 }, addPoints: 0, grade: false
-                    },
-                    {
-                        text: "b) 停在地下室入口，拉推車下地下室辦理",
-                        result: "雖然多花了一些體力跟時間，但安全下莊，沒造成局裡資產損失。",
-                        changes: { stamina: 1, smart: 1 }, addPoints: 1, grade: true
-                    }
-                ]
-            },
-            {
-                title: "⚡ 雙十一海量爆量包裹",
-                desc: "雙十一電商購物節來臨，今天局裡的包裹堆得像一座小山，看著爆滿的籃車，你決定怎麼處理？",
-                options: [
-                    {
-                        text: "a) 開啟狂暴模式！加班拚當天全部清空",
-                        result: "你成為當天最早清完包裹的勇士，獲得長官高度讚賞，但也累得隔天腰酸背痛。",
-                        changes: { stamina: 2, management: 1 }, addPoints: 1, grade: true
-                    },
-                    {
-                        text: "b) 規劃最優化路線，並與鄰段同事互相支援",
-                        result: "你發揮路線規劃長才，跟同事組隊互相幫忙，順利在合理時間內送完，大家感情更融洽！",
-                        changes: { route: 2, relationship: 1 }, addPoints: 1, grade: true
                     }
                 ]
             }
@@ -340,22 +395,6 @@
                     text: "b) 買罐伯朗咖啡請司機，說：「哥，半夜體力活汗味重啦！」",
                     result: "司機接過咖啡笑出來，化解了尷尬，甚至還幫你分擔搬了兩袋！人緣與應變大提升！",
                     changes: { relationship: 1, smart: 1 }, addPoints: 1, grade: true
-                }
-            ]
-        },
-        {
-            title: "🛒 雙籃車衝刺月台慘案",
-            desc: "半夜為了趕時間下班，你圖方便打算「一次直接推兩台籃車」進月台，結果重重重心失衡...",
-            options: [
-                {
-                    text: "a) 硬幹拉住！試圖靠蠻力硬壓",
-                    result: "砰！籃車直接連人帶車推落月台下！郵件散落一地，現場一片狼藉...",
-                    changes: { smart: -2, stamina: -1 }, addPoints: 0, grade: false
-                },
-                {
-                    text: "b) 發現不對勁立刻放手大喊請同事幫忙",
-                    result: "大家手忙腳亂幫忙攔住，雖然沒掉落月台，但被現場主管痛罵了一頓！",
-                    changes: { management: -1, relationship: 1 }, addPoints: 1, grade: false
                 }
             ]
         }
@@ -431,7 +470,7 @@
     }
 
     function startYear() {
-        if (player.age >= 65) { endGame(false); return; }
+        if (player.age >= 65 || player.isFired) { endGame(false); return; }
 
         document.getElementById("btn-main").classList.add("hidden");
         document.getElementById("log-container").innerHTML = "";
@@ -457,6 +496,13 @@
     }
 
     function processChoice(opt) {
+        if (opt.triggerFire) {
+            player.isFired = true;
+            player.firedReason = opt.fireReason;
+            endGame(false);
+            return;
+        }
+
         let changeLogs = [];
 
         if (opt.changes) {
@@ -533,36 +579,44 @@
 
         let finalTitle = "【堅守崗位郵務員】";
         
-        if (isOfficeWin) {
+        if (player.isFired) {
+            document.getElementById("result-header").innerText = "⚠️ 職務解僱通知書（強制退休）";
+            finalTitle = "🚨【局內極端毒瘤．強制免職退場】";
+        } else if (player.stats.relationship <= 6 || player.stats.management <= 6) {
+            finalTitle = "☣️【局內知名毒瘤．長官與同事都搖頭】";
+        } else if (!isOfficeWin && player.gradeA < 3) {
+            finalTitle = "🦠【萬年乙等擺爛毒瘤．平安就是福】";
+        } else if (isOfficeWin) {
             document.getElementById("result-header").innerText = "🎉 順利轉內勤．遊戲圓滿通關！";
             finalTitle = "【冷氣房辦公室大師．成功上岸】";
-        } else {
-            if (player.isNightShift) {
-                finalTitle = "【月台籃車殺手．夜行郵務傳說】";
-            } else if (player.isNightShiftUnlocked) {
-                finalTitle = "【自由穿梭內外勤的鋼鐵郵務士】";
-            } else if (player.stats.relationship >= 18) {
-                finalTitle = "【局內人氣王．萬人迷郵務士】";
-            } else if (player.stats.management >= 18) {
-                finalTitle = "【向上管理大師．長官紅人】";
-            } else if (player.stats.route >= 18) {
-                finalTitle = "【活地圖巷弄傳奇】";
-            }
+        } else if (player.isNightShift) {
+            finalTitle = "【月台籃車殺手．夜行郵務傳說】";
+        } else if (player.isNightShiftUnlocked) {
+            finalTitle = "【自由穿梭內外勤的鋼鐵郵務士】";
+        } else if (player.stats.relationship >= 18) {
+            finalTitle = "【局內人氣王．萬人迷郵務士】";
+        } else if (player.stats.management >= 18) {
+            finalTitle = "【向上管理大師．長官紅人】";
+        } else if (player.stats.route >= 18) {
+            finalTitle = "【活地圖巷弄傳奇】";
         }
+
+        let firedMsg = player.isFired ? `<br><b style="color:red;">免職原因：</b> ${player.firedReason}<br>` : "";
 
         document.getElementById("summary-content").innerHTML = `
             <b>姓名：</b> ${player.name}<br>
             <b>開局設定：</b> ${player.startAge} 歲入職<br>
             <b>初始段別分發：</b> ${player.section}<br>
             <b>揭曉初始天賦：</b> <span style="color:#0288d1; font-weight:bold;">${codeNameMap[player.code]}</span><br>
-            <b>最終生涯稱號：</b> <span style="font-size:18px; color:#008751; font-weight:bold;">${finalTitle}</span><br>
+            <b>最終生涯稱號：</b> <span style="font-size:18px; color:#d32f2f; font-weight:bold;">${finalTitle}</span><br>
+            ${firedMsg}
             <hr>
             📊 <b>最終能力總結：</b><br>
             - 體能: ${player.stats.stamina} / 熟練: ${player.stats.route} / 向上管理: ${player.stats.management} / 應變: ${player.stats.smart} / 人緣: ${player.stats.relationship}<br>
             <hr>
             📮 <b>生涯處理郵件總數：</b> ${player.delivered.toLocaleString()} 件<br>
             🏆 <b>獲得考績甲等：</b> ${player.gradeA} 次<br>
-            💼 <b>退休身分：</b> ${isOfficeWin ? "內勤人員" : player.role}<br>
+            💼 <b>退休身分：</b> ${player.isFired ? "強制解僱" : (isOfficeWin ? "內勤人員" : player.role)}<br>
         `;
     }
 </script>
