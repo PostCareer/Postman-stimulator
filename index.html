@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>郵差人生模擬器 V4.5</title>
+    <title>郵差人生模擬器 V6.0</title>
     <style>
         :root {
             --green-main: #008751;
@@ -23,9 +23,9 @@
         h1 { color: var(--green-main); text-align: center; margin-top: 0; font-size: 22px; }
         
         .status-bar {
-            display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px;
+            display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px;
             background: #e8f5e9; padding: 10px; border-radius: 10px; margin-bottom: 12px;
-            text-align: center; font-size: 13px;
+            text-align: center; font-size: 12px;
         }
         .status-item span { display: block; font-weight: bold; font-size: 14px; color: var(--green-dark); }
 
@@ -60,6 +60,7 @@
             width: 100%; background-color: var(--green-main); color: white; border: none;
             padding: 12px; font-size: 15px; font-weight: bold; border-radius: 8px; cursor: pointer; margin-bottom: 8px;
         }
+        .btn-action:disabled { background-color: #a5d6a7; cursor: not-allowed; }
         .btn-exam { background-color: #0288d1; }
         .btn-job { background-color: #f57c00; }
 
@@ -88,7 +89,7 @@
 <body>
 
 <div class="container">
-    <h1>📮 郵差人生模擬器 V4.5</h1>
+    <h1>📮 郵差人生模擬器 V6.0</h1>
 
     <!-- 階段 1：設定 -->
     <div id="setup-page">
@@ -103,8 +104,8 @@
         <div class="setup-group">
             <label for="player-section">剛進局初次職務選擇：</label>
             <select id="player-section">
-                <option value="混投段">1. 混投段（平信/掛號/包裹混投，重視路線熟練與人緣）</option>
-                <option value="快捷包裹段">2. 快捷包裹段（重包裹多、時效緊，重視體能與應變）</option>
+                <option value="混投段">1. 混投段（平信/掛號/包裹混投）</option>
+                <option value="快捷包裹段">2. 快捷包裹段（重包裹多、時效緊）</option>
             </select>
         </div>
         <div class="setup-group">
@@ -121,15 +122,17 @@
     <!-- 階段 2：主遊戲畫面 -->
     <div id="game-page" class="hidden">
         <div class="status-bar">
-            <div class="status-item">年齡 / 當前職務<span id="stat-age">18歲</span></div>
+            <div class="status-item">年齡 / 職務<span id="stat-age">18歲</span></div>
+            <div class="status-item">目前薪級 / 月薪<span id="stat-salary">55級 ($36,250)</span></div>
+            <div class="status-item">生涯累積總薪資<span id="stat-total-salary" style="color:#d32f2f;">$0</span></div>
             <div class="status-item">考績甲等累計<span id="stat-eval">0 次</span></div>
         </div>
 
         <!-- 屬性加點面板 -->
         <div class="stats-panel">
             <div class="stats-header">
-                <span>📊 屬性能力值 (上限 20)</span>
-                <span style="color:#d32f2f;">可分配點數：<span id="stat-points">0</span></span>
+                <span>📊 屬性能力值 (上限 20，無完美郵差)</span>
+                <span style="color:#d32f2f;">剩餘點數：<span id="stat-points">0</span></span>
             </div>
             <div class="stat-row">
                 <span>⚡ 體能強度：<b id="val-stamina">10</b>/20</span>
@@ -163,7 +166,7 @@
 
         <button id="btn-main" class="btn-action" onclick="startYear()">進行今年業務</button>
 
-        <!-- 特殊職務競爭與升遷區域（動態出現） -->
+        <!-- 特殊職務競爭與升遷區域 -->
         <div class="job-section hidden" id="job-section">
             <div class="job-title">🏆 今年出現的特殊職務/升遷機會！</div>
             <div id="opportunity-notice" class="opportunity-notice"></div>
@@ -179,14 +182,24 @@
         <h2 id="result-header">🏆 郵差生涯榮退報告</h2>
         <div id="summary-content" style="line-height: 1.8; background:#fff8e1; padding:15px; border-radius:10px;"></div>
         <br>
-        <button class="btn-action" onclick="location.reload()">重新體驗新天賦</button>
+        <button class="btn-action" onclick="location.reload()">重新體驗新人生</button>
     </div>
 </div>
 
 <script>
+    // 專二：36級至55級對照表
+    const salaryTable = {
+        55: 36250, 54: 37405, 53: 38640, 52: 39885, 51: 41130,
+        50: 42370, 49: 43600, 48: 44850, 47: 46090, 46: 47325,
+        45: 48560, 44: 49775, 43: 50470, 42: 51190, 41: 51890,
+        40: 52590, 39: 53290, 38: 53995, 37: 54695, 36: 55395  // 碰頂
+    };
+
     let player = {
         name: "", code: "A", section: "混投段", age: 18, startAge: 18, role: "外勤郵務員（混投段）",
-        points: 3,
+        salaryGrade: 55, 
+        totalEarnings: 0, // 生涯累積總薪資
+        points: 2, // 初始給2點，必須點完才能開始
         stats: { stamina: 10, route: 10, management: 10, smart: 10, relationship: 10 },
         delivered: 0, gradeA: 0,
         examPassed: false,
@@ -196,7 +209,6 @@
 
     const MAX_STAT = 20;
 
-    // 通用事件
     const commonEvents = [
         {
             title: "🌧️ 突如其來的暴雨考驗",
@@ -226,7 +238,7 @@
                 {
                     text: "b) 手速極快秒按『收回』，並補一句『帳號被盜/好友傳錯』",
                     result: "雖然有幾個人看到，但你死不承認！靠著極強的心理素質撐過去了，大家心照不宣。",
-                    changes: { smart: 2, management: -1 }, addPoints: 1, grade: false
+                    changes: { smart: 2, management: -1 }, addPoints: 0, grade: false
                 }
             ]
         },
@@ -248,72 +260,39 @@
         }
     ];
 
-    // 職務專屬事件
     const jobSpecificEvents = {
         "白天接送收攬": [
             {
                 title: "📦 合作廠商爆量特大宗包裹",
-                desc: "大型網購廠商今日突然爆量幾百箱包裹，車子空間幾乎塞不下，且必須在下班前趕回局裡刷碼封袋！",
+                desc: "大型網購廠商今日突然爆量幾百箱包裹，車子空間幾乎塞不下！",
                 options: [
                     {
                         text: "a) 展現體能與堆疊技巧，硬是把它塞爆載走！",
-                        result: "你憑藉超強體能與空間利用率硬是載完，廠商大讚效率高！獲得考績甲等肯定！",
-                        changes: { stamina: 1, route: 1 }, addPoints: 1, grade: true
+                        result: "你憑藉超強體能載完，廠商大讚效率高！獲得考績甲等肯定！",
+                        changes: { stamina: 1 }, addPoints: 0, grade: true
                     },
                     {
                         text: "b) 買上聯繫局內調派大貨車或二班支援",
-                        result: "展現優異的應變調度，雖然多花了一點時間溝通，但安全且順利完成任務。",
-                        changes: { smart: 2, management: 1 }, addPoints: 1, grade: false
-                    }
-                ]
-            },
-            {
-                title: "🔒 廠商打烊鎖門吃了閉門羹",
-                desc: "趕在最後一趟收攬時間到達合作廠商，卻發現門口已經關燈鎖門，電話也無人接聽！",
-                options: [
-                    {
-                        text: "a) 展現人緣社交，連環 Call 聯絡老闆私訊窗口",
-                        result: "你靠著平時建立的好人緣順利連絡上老闆！對方親自跑回來開門，感動落淚送你兩瓶飲料！",
-                        changes: { relationship: 2, smart: 1 }, addPoints: 1, grade: false
-                    },
-                    {
-                        text: "b) 按規定拍照留存，註記『無人應門未收攬』回局交差",
-                        result: "做事公事公辦無可挑剔，但也失去了一次建立深度客戶關係的機會。",
-                        changes: { management: 1 }, addPoints: 0, grade: false
+                        result: "展現優異的應變調度，安全順利完成任務。",
+                        changes: { smart: 1 }, addPoints: 0, grade: false
                     }
                 ]
             }
         ],
         "半夜接送收攬": [
             {
-                title: "🌙 凌晨大宗郵車同時進局月台大塞車",
-                desc: "凌晨三點，數台幹線大郵車同時抵達月台，大量包裹與郵袋傾瀉而下，時間緊迫，大家都累趴了！",
-                options: [
-                    {
-                        text: "a) 化身夜行怪力魔人，帶頭爆發力衝刺卸貨！",
-                        result: "你的鋼鐵體魄感染了全場！卸貨進度大提早，連大車司機都直呼你太猛了！",
-                        changes: { stamina: 2, relationship: 1 }, addPoints: 1, grade: true
-                    },
-                    {
-                        text: "b) 冷靜指揮現場卡車進出與卸貨優先順序",
-                        result: "靠著靈活應變讓月台動線流暢，不費吹灰之力就化解了月台塞車危機！",
-                        changes: { smart: 2, management: 1 }, addPoints: 1, grade: false
-                    }
-                ]
-            },
-            {
                 title: "🔥 深夜山區/郊區郵車故障慘案",
-                desc: "半夜四點行經昏暗山區，郵車突然發動機抖動後熄火！四周寂靜無人且收訊極差，你該怎麼辦？",
+                desc: "半夜四點行經昏暗山區，郵車突然發動機抖動後熄火！四周寂靜無人，你該怎麼辦？",
                 options: [
                     {
                         text: "a) 展現應變自己動手修（黑手魂爆發）",
-                        result: "💥 慘劇發生！你拔亂線路導致電線短路走火！整台郵車在荒郊野外瞬間燒成巨大的『烈焰火球』！🔥 雖然你逃得快沒受傷，但整車郵件付之一炬... 局長怒不可遏，給你記大過處分，向上管理與人緣嚴重重創！",
-                        changes: { management: -5, relationship: -3, smart: -2 }, addPoints: 0, grade: false
+                        result: "💥 慘劇發生！拔亂線路導致短路走火！郵車瞬間燒成『烈焰火球』！🔥 被記大過處分！",
+                        changes: { management: -4, relationship: -2 }, addPoints: 0, grade: false
                     },
                     {
                         text: "b) 通報緊急支援與後續調度",
-                        result: "冷靜爬到高處尋找微弱訊號，成功聯繫值班稽查調派備用車與拖吊支援！雖然稍微延誤，但處事穩重，保住了全車郵件安全！",
-                        changes: { management: 2, smart: 1 }, addPoints: 1, grade: false
+                        result: "冷態聯繫值班稽查調派備用車！處事穩重，保住了全車郵件安全！",
+                        changes: { management: 1, smart: 1 }, addPoints: 0, grade: false
                     }
                 ]
             }
@@ -321,49 +300,17 @@
         "郵務稽查": [
             {
                 title: "🗣️ 爆怒民眾衝到局內飆罵投遞態度",
-                desc: "一名民眾因沒收到掛號信直接衝進局裡，拍桌大罵某位郵差態度惡劣，局長叫你出來處理！",
+                desc: "民眾衝進局裡拍桌大罵，局長叫你出來處理！",
                 options: [
                     {
-                        text: "a) 展現極致 EQ 與人緣，倒茶撫平民眾情緒完美化解",
-                        result: "你說話得體、態度誠懇，民眾最後反而不好意思地跟你道歉離去！局長對你大加讚賞！",
-                        changes: { relationship: 2, management: 2 }, addPoints: 1, grade: true
+                        text: "a) 展現極致 EQ 與人緣，倒茶撫平民眾情緒",
+                        result: "你態度誠懇完美化解！局長對你大加讚賞！",
+                        changes: { relationship: 1, management: 1 }, addPoints: 1, grade: true
                     },
                     {
-                        text: "b) 瞭解原委後，拿出相關規定公事公辦解釋並幫同仁坦傷害",
-                        result: "雖然民眾離去時仍有怨言，但你成功維護了局內同仁的尊嚴與立場，獲得基層同仁好感！",
-                        changes: { relationship: 2, smart: 1 }, addPoints: 1, grade: false
-                    }
-                ]
-            },
-            {
-                title: "🔍 局長交辦突擊檢查外勤投遞品質",
-                desc: "最近總公司推動品質提升計畫，局長命令你抽查各郵務段的投遞狀況與出勤紀錄。",
-                options: [
-                    {
-                        text: "a) 鐵面無私嚴格查核，揪出違規缺失列入報告",
-                        result: "報告非常漂亮，向上管理能力獲得局長極高評價！但私下被基層同仁稱為『鐵血稽查』。",
-                        changes: { management: 2, relationship: -1 }, addPoints: 1, grade: true
-                    },
-                    {
-                        text: "b) 採『輔導代替懲處』，私下提醒同仁改正再交報告",
-                        result: "局內風氣大好，基層同仁對你十分推崇，人緣指數爆表！",
-                        changes: { relationship: 2, smart: 1 }, addPoints: 1, grade: false
-                    }
-                ]
-            },
-            {
-                title: "👹 他局調來空降資深同事空降角力",
-                desc: "總公司安排一位從鄰局調過來的資深同仁，聽說此人脾氣古怪、極度難相處且愛挑毛病，大家避之唯恐不及。你身為稽查該如何應對？",
-                options: [
-                    {
-                        text: "a) 阿諛奉承，天天買咖啡捧他",
-                        result: "你極盡巴結之能事，確實順利打入對方的『核心小圈圈』。但此舉讓其他下屬與同仁極度看不慣，大家暗地裡唾棄你為『狗腿子稽查』，基層怨聲載道，你的基層人緣大失血！",
-                        changes: { management: 1, relationship: -4 }, addPoints: 0, grade: false
-                    },
-                    {
-                        text: "b) 按規矩行事，公事公辦不卑不亢",
-                        result: "你不阿諛也不招惹，一切按局內標準規定處理業務。雖然該同事對你有些冷淡，但你展現出的公正立場贏得了全體下屬與同仁的敬重！",
-                        changes: { relationship: 2, smart: 1, management: 1 }, addPoints: 1, grade: true
+                        text: "b) 拿出相關規定公事公辦解釋並幫同仁坦傷害",
+                        result: "維護了局內同仁尊嚴，獲得基層同仁好感！",
+                        changes: { relationship: 1 }, addPoints: 0, grade: false
                     }
                 ]
             }
@@ -378,18 +325,16 @@
         player.section = document.getElementById("player-section").value;
 
         if (player.section === "快捷包裹段") {
-            player.stats.stamina += 3;
-            player.stats.smart += 2;
+            player.stats.stamina += 2;
             player.role = "外勤郵務員（快捷包裹段）";
         } else {
-            player.stats.route += 3;
-            player.stats.relationship += 2;
+            player.stats.route += 2;
             player.role = "外勤郵務員（混投段）";
         }
 
-        if (player.code === "A") { player.stats.route += 2; player.stats.relationship += 1; }
-        if (player.code === "B") { player.stats.smart += 2; player.stats.management += 1; }
-        if (player.code === "C") { player.stats.stamina += 2; player.stats.route += 1; }
+        if (player.code === "A") { player.stats.route += 1; }
+        if (player.code === "B") { player.stats.smart += 1; }
+        if (player.code === "C") { player.stats.stamina += 1; }
 
         document.getElementById("setup-page").classList.add("hidden");
         document.getElementById("game-page").classList.remove("hidden");
@@ -397,7 +342,12 @@
     }
 
     function updateUI() {
+        let currentMonthlySalary = salaryTable[player.salaryGrade] || 36250;
+        let gradeText = player.salaryGrade === 36 ? "36級 (碰頂)" : `${player.salaryGrade}級`;
+
         document.getElementById("stat-age").innerText = `${player.age}歲 (${player.role})`;
+        document.getElementById("stat-salary").innerText = `${gradeText} ($${currentMonthlySalary.toLocaleString()})`;
+        document.getElementById("stat-total-salary").innerText = `$${player.totalEarnings.toLocaleString()}`;
         document.getElementById("stat-eval").innerText = `${player.gradeA} 次`;
         document.getElementById("stat-points").innerText = player.points;
 
@@ -410,10 +360,19 @@
             if (btn) btn.disabled = (player.points <= 0 || player.stats[key] >= MAX_STAT);
         }
 
+        // 強制檢查：剩餘點數必須 == 0 才能進行業務，否則停用按鈕！
+        let mainBtn = document.getElementById("btn-main");
+        if (player.points > 0) {
+            mainBtn.disabled = true;
+            mainBtn.innerText = `請先配完點數！(還剩 ${player.points} 點)`;
+        } else {
+            mainBtn.disabled = false;
+            mainBtn.innerText = player.age >= 65 ? "觀看榮退報告" : "進行今年業務";
+        }
+
         checkCareerOpportunities();
     }
 
-    // 檢查並動態顯示今年可競爭的職務或升遷考試
     function checkCareerOpportunities() {
         let yearsOfService = player.age - player.startAge;
         let jobSection = document.getElementById("job-section");
@@ -424,7 +383,6 @@
         let btnInspector = document.getElementById("btn-job-inspector");
         let btnExam = document.getElementById("btn-exam");
 
-        // 先預設全部隱藏
         btnNight.classList.add("hidden");
         btnDay.classList.add("hidden");
         btnInspector.classList.add("hidden");
@@ -432,33 +390,24 @@
 
         let availableNotice = [];
 
-        // 1. 升遷考試：3年一個循環，且沒考過
         if (yearsOfService > 0 && yearsOfService % 3 === 0 && !player.examPassed) {
             btnExam.classList.remove("hidden");
             availableNotice.push("📝 總公司舉辦 3 年一度的內部升遷大考，可報考轉內勤！");
         }
 
-        // 隨機缺額觸發（隨機種子基於年份）
-        let rngNight = Math.random();
-        let rngDay = Math.random();
-        let rngInspector = Math.random();
-
-        // 2. 半夜接送收攬：門檻 5 年，40% 機率有退休缺
-        if (yearsOfService >= 5 && player.role !== "半夜接送收攬" && rngNight < 0.40) {
+        if (yearsOfService >= 5 && player.role !== "半夜接送收攬" && Math.random() < 0.40) {
             btnNight.classList.remove("hidden");
-            availableNotice.push("🌙 局內『半夜接送收攬』有前輩退休，開出空缺！");
+            availableNotice.push("🌙 局內『半夜接送收攬』有空缺！");
         }
 
-        // 3. 白天接送收攬：門檻 10 年，35% 機率有退休缺
-        if (yearsOfService >= 10 && player.role !== "白天接送收攬" && rngDay < 0.35) {
+        if (yearsOfService >= 10 && player.role !== "白天接送收攬" && Math.random() < 0.35) {
             btnDay.classList.remove("hidden");
-            availableNotice.push("☀️ 局內『白天接送收攬』有前輩退休，開出空缺！");
+            availableNotice.push("☀️ 局內『白天接送收攬』有空缺！");
         }
 
-        // 4. 郵務稽查：門檻 15 年，25% 機率有退休缺
-        if (yearsOfService >= 15 && player.role !== "郵務稽查" && rngInspector < 0.25) {
+        if (yearsOfService >= 15 && player.role !== "郵務稽查" && Math.random() < 0.25) {
             btnInspector.classList.remove("hidden");
-            availableNotice.push("🔍 局內『郵務稽查』有大老榮退，開放競爭！");
+            availableNotice.push("🔍 局內『郵務稽查』開放競爭！");
         }
 
         if (availableNotice.length > 0) {
@@ -478,15 +427,15 @@
     }
 
     function startYear() {
+        if (player.points > 0) return; // 點數沒點完不給進行
         if (player.age >= 65 || player.isFired) { endGame(false); return; }
 
         document.getElementById("btn-main").classList.add("hidden");
         document.getElementById("log-container").innerHTML = "";
 
+        // 每年極度節制地只給 1 點自由點數（無完美郵差）
         player.points += 1;
-        updateUI();
 
-        // 判斷是否出專屬事件 (50% 機率)
         let evtPool = [...commonEvents];
         if (jobSpecificEvents[player.role] && Math.random() < 0.5) {
             evtPool = jobSpecificEvents[player.role];
@@ -506,6 +455,8 @@
             btn.onclick = () => processChoice(opt);
             container.appendChild(btn);
         });
+        
+        updateUI();
     }
 
     function processChoice(opt) {
@@ -529,7 +480,7 @@
 
         if (opt.addPoints > 0) {
             player.points += opt.addPoints;
-            changeLogs.push(`獲得自由點數 +${opt.addPoints}`);
+            changeLogs.push(`獲得額外點數 +${opt.addPoints}`);
         }
 
         if (opt.grade) {
@@ -537,56 +488,59 @@
             changeLogs.push(`獲得考績甲等`);
         }
 
+        // 計算薪水與累積總薪資（月薪 x 16.5 個月包含年終與考績）
+        let currentMonthly = salaryTable[player.salaryGrade] || 36250;
+        let yearlyIncome = Math.floor(currentMonthly * 16.5);
+        player.totalEarnings += yearlyIncome;
+
+        // 薪級晉升
+        if (player.salaryGrade > 36) {
+            player.salaryGrade--;
+            changeLogs.push(`薪級升至第 ${player.salaryGrade} 級`);
+        } else {
+            changeLogs.push(`已達專二碰頂最高薪級 (第 36 級)`);
+        }
+
+        changeLogs.push(`今年獲得年薪約 $${yearlyIncome.toLocaleString()} (含年終考績)`);
+
         player.delivered += Math.floor(player.stats.route * 1200 + 8000);
 
-        let logText = `📢 <b>【選擇結果】</b><br>${opt.result}<br><br><b>📈 影響結果：</b> ${changeLogs.length > 0 ? changeLogs.join(" | ") : "無能力變動"}`;
+        let logText = `📢 <b>【選擇結果】</b><br>${opt.result}<br><br><b>📈 結算：</b> ${changeLogs.join(" | ")}`;
         document.getElementById("choices-container").innerHTML = "";
         document.getElementById("log-container").innerHTML = `<div class="log-box">${logText}</div>`;
 
         player.age++;
-        updateUI();
-
+        
         let mainBtn = document.getElementById("btn-main");
         mainBtn.classList.remove("hidden");
-        mainBtn.innerText = player.age >= 65 ? "觀看榮退報告" : "推進到下一年";
+        updateUI();
     }
 
     function applyJob(targetJob) {
         let score = 0;
-        let reqDesc = "";
-
-        if (targetJob === "白天接送收攬") {
-            score = player.stats.route * 2 + player.stats.stamina * 1.5;
-            reqDesc = "比拼屬性：路線熟練度 + 體能強度";
-        } else if (targetJob === "半夜接送收攬") {
-            score = player.stats.stamina * 2 + player.stats.smart * 1.5;
-            reqDesc = "比拼屬性：體能強度 + 處事應變";
-        } else if (targetJob === "郵務稽查") {
-            score = player.stats.management * 2 + player.stats.relationship * 1.5;
-            reqDesc = "比拼屬性：向上管理 + 人緣社交";
-        }
+        if (targetJob === "白天接送收攬") score = player.stats.route * 2 + player.stats.stamina * 1.5;
+        else if (targetJob === "半夜接送收攬") score = player.stats.stamina * 2 + player.stats.smart * 1.5;
+        else if (targetJob === "郵務稽查") score = player.stats.management * 2 + player.stats.relationship * 1.5;
 
         let rivalScore = Math.floor(Math.random() * 30) + 35;
 
         if (score >= rivalScore) {
             player.role = targetJob;
-            alert(`🎉 競爭成功！\n你的綜合比分為 ${score.toFixed(1)} 分（擊敗資深競爭者 ${rivalScore} 分）！\n你已成功獲得新職位：【${targetJob}】！`);
+            alert(`🎉 競爭成功！你成功獲得新職位：【${targetJob}】！`);
         } else {
-            alert(`❌ 競爭失敗！\n你的綜合比分 ${score.toFixed(1)} 分不敵資深同事的 ${rivalScore} 分！\n資力與關鍵屬性還不夠高，請繼續努力提升能力再試！\n(${reqDesc})`);
+            alert(`❌ 競爭失敗！資力與關鍵屬性還不夠高，請繼續努力！`);
         }
         updateUI();
     }
 
     function takeExam() {
         player.examPassed = true;
-        let rng = Math.random();
-
-        if (rng < 0.7) {
-            alert("🎉 恭喜！你成功通過內部升遷考試並順利適應內勤生活！\n準備結束外勤生涯，邁向冷氣房辦公室人生～");
+        if (Math.random() < 0.7) {
+            alert("🎉 恭喜通過升遷大考轉任內勤！邁向冷氣房人生～");
             endGame(true);
         } else {
             player.role = "外勤郵務員（內勤適應不良重回外勤）";
-            alert("⚠️ 雖然通過了考試轉任內勤，但你發現冷氣房吹久了頭痛、坐辦公桌腰痠背痛，嚴重適應不良！\n你申請退貨重回外勤！");
+            alert("⚠️ 轉任內勤後適應不良，申請退貨重回外勤！");
             updateUI();
         }
     }
@@ -595,12 +549,7 @@
         document.getElementById("game-page").classList.add("hidden");
         document.getElementById("result-page").classList.remove("hidden");
 
-        let codeNameMap = {
-            "A": "【天賦 A：路線敏銳】",
-            "B": "【天賦 B：靈敏應變】",
-            "C": "【天賦 C：鋼鐵體魄】"
-        };
-
+        let codeNameMap = { "A": "【天賦 A：路線敏銳】", "B": "【天賦 B：靈敏應變】", "C": "【天賦 C：鋼鐵體魄】" };
         let finalTitle = "【堅守崗位郵務員】";
         
         if (player.isFired) {
@@ -618,21 +567,25 @@
         }
 
         let firedMsg = player.isFired ? `<br><b style="color:red;">免職原因：</b> ${player.firedReason}<br>` : "";
+        let finalSalary = salaryTable[player.salaryGrade] || 36250;
 
         document.getElementById("summary-content").innerHTML = `
             <b>姓名：</b> ${player.name}<br>
             <b>開局設定：</b> ${player.startAge} 歲入職<br>
-            <b>初始職務分發：</b> ${player.section}<br>
-            <b>揭曉初始天賦：</b> <span style="color:#0288d1; font-weight:bold;">${codeNameMap[player.code]}</span><br>
-            <b>最終生涯稱號：</b> <span style="font-size:18px; color:#d32f2f; font-weight:bold;">${finalTitle}</span><br>
+            <b>初始職務：</b> ${player.section}<br>
+            <b>揭曉天賦：</b> <span style="color:#0288d1; font-weight:bold;">${codeNameMap[player.code]}</span><br>
+            <b>生涯稱號：</b> <span style="font-size:18px; color:#d32f2f; font-weight:bold;">${finalTitle}</span><br>
             ${firedMsg}
             <hr>
-            📊 <b>最終能力總結：</b><br>
-            - 體能: ${player.stats.stamina} / 熟練: ${player.stats.route} / 向上管理: ${player.stats.management} / 應變: ${player.stats.smart} / 人緣: ${player.stats.relationship}<br>
+            💰 <b>生涯財務總結：</b><br>
+            - 生涯累積總薪資：<b style="font-size:18px; color:#2e7d32;">$${player.totalEarnings.toLocaleString()} 元</b><br>
+            - 退休前最終薪級：<b>第 ${player.salaryGrade} 級</b> ($${finalSalary.toLocaleString()}/月)<br>
+            <hr>
+            📊 <b>最終能力值：</b><br>
+            體能: ${player.stats.stamina} | 熟練: ${player.stats.route} | 向上管理: ${player.stats.management} | 應變: ${player.stats.smart} | 人緣: ${player.stats.relationship}<br>
             <hr>
             📮 <b>生涯處理郵件總數：</b> ${player.delivered.toLocaleString()} 件<br>
             🏆 <b>獲得考績甲等：</b> ${player.gradeA} 次<br>
-            💼 <b>退休身分：</b> ${player.isFired ? "強制解僱" : player.role}<br>
         `;
     }
 </script>
