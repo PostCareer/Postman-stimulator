@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>郵務人生模擬器 V3.6</title>
+    <title>郵務人生模擬器 V3.7</title>
     <style>
         :root {
             --green-main: #008751;
@@ -79,7 +79,7 @@
 <body>
 
 <div class="container">
-    <h1>📮 郵務人生模擬器 V3.6</h1>
+    <h1>📮 郵務人生模擬器 V3.7</h1>
 
     <!-- 階段 1：設定 -->
     <div id="setup-page">
@@ -92,14 +92,21 @@
             <input type="number" id="player-age" value="18" min="18" max="60">
         </div>
         <div class="setup-group">
-            <label for="player-code">選擇天賦傾向（將隱藏至退休結算）：</label>
-            <select id="player-code">
-                <option value="A">【傾向 A】特化：路線熟練與人緣社交</option>
-                <option value="B">【傾向 B】特化：處事應變與向上管理</option>
-                <option value="C">【傾向 C】特化：體能強度與路線熟練</option>
+            <label for="player-section">進局初次分發選擇（分段）：</label>
+            <select id="player-section">
+                <option value="快捷包裹段">1. 快捷包裹段（重包裹多、時效緊迫、重視體能與應变）</option>
+                <option value="混投段">2. 混投段（平信/掛號/包裹混投、路段複雜、重視熟練與人緣）</option>
             </select>
         </div>
-        <button class="btn-action" onclick="startGame()">開啟生涯！</button>
+        <div class="setup-group">
+            <label for="player-code">選擇天賦傾向（將隱藏至退休結算）：</label>
+            <select id="player-code">
+                <option value="A">【天賦 A】路線敏銳（路線熟練與人緣加成）</option>
+                <option value="B">【天賦 B】靈敏應變（處事應變與向上管理加成）</option>
+                <option value="C">【天賦 C】鋼鐵體魄（體能強度與路線熟練加成）</option>
+            </select>
+        </div>
+        <button class="btn-action" onclick="startGame()">正式進局報到！</button>
     </div>
 
     <!-- 階段 2：主遊戲畫面 -->
@@ -160,7 +167,7 @@
 
 <script>
     let player = {
-        name: "", code: "A", age: 18, startAge: 18, role: "外勤郵務員",
+        name: "", code: "A", section: "快捷包裹段", age: 18, startAge: 18, role: "外勤郵務員",
         points: 3,
         stats: { stamina: 10, route: 10, management: 10, smart: 10, relationship: 10 },
         delivered: 0, gradeA: 0,
@@ -174,10 +181,23 @@
         player.startAge = parseInt(document.getElementById("player-age").value) || 18;
         player.age = player.startAge;
         player.code = document.getElementById("player-code").value;
+        player.section = document.getElementById("player-section").value;
 
-        if (player.code === "A") { player.stats.route = 14; player.stats.relationship = 13; }
-        if (player.code === "B") { player.stats.smart = 14; player.stats.management = 14; }
-        if (player.code === "C") { player.stats.stamina = 15; player.stats.route = 12; }
+        // 段別基礎屬性加成
+        if (player.section === "快捷包裹段") {
+            player.stats.stamina += 3;
+            player.stats.smart += 2;
+            player.role = "外勤郵務員（快捷包裹段）";
+        } else {
+            player.stats.route += 3;
+            player.stats.relationship += 2;
+            player.role = "外勤郵務員（混投段）";
+        }
+
+        // 天賦基礎屬性加成
+        if (player.code === "A") { player.stats.route += 2; player.stats.relationship += 1; }
+        if (player.code === "B") { player.stats.smart += 2; player.stats.management += 1; }
+        if (player.code === "C") { player.stats.stamina += 2; player.stats.route += 1; }
 
         document.getElementById("setup-page").classList.add("hidden");
         document.getElementById("game-page").classList.remove("hidden");
@@ -373,9 +393,9 @@
         document.getElementById("result-page").classList.remove("hidden");
 
         let codeNameMap = {
-            "A": "【代號 A：巷弄人氣王】",
-            "B": "【代號 B：向上管理之星】",
-            "C": "【代號 C：鐵人郵務士】"
+            "A": "【天賦 A：路線敏銳】",
+            "B": "【天賦 B：靈敏應變】",
+            "C": "【天賦 C：鋼鐵體魄】"
         };
 
         let finalTitle = "【堅守崗位郵務員】";
@@ -392,7 +412,8 @@
         document.getElementById("summary-content").innerHTML = `
             <b>姓名：</b> ${player.name}<br>
             <b>開局設定：</b> ${player.startAge} 歲入職<br>
-            <b>揭曉初始代號：</b> <span style="color:#0288d1; font-weight:bold;">${codeNameMap[player.code]}</span><br>
+            <b>初始段別分發：</b> ${player.section}<br>
+            <b>揭曉初始天賦：</b> <span style="color:#0288d1; font-weight:bold;">${codeNameMap[player.code]}</span><br>
             <b>最終生涯稱號：</b> <span style="font-size:18px; color:#008751; font-weight:bold;">${finalTitle}</span><br>
             <hr>
             📊 <b>最終能力總結：</b><br>
