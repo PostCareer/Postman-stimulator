@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>郵差人生模擬器 V6.0</title>
+    <title>郵差人生模擬器 V8.0 終極完整版</title>
     <style>
         :root {
             --green-main: #008751;
@@ -89,7 +89,7 @@
 <body>
 
 <div class="container">
-    <h1>📮 郵差人生模擬器 V6.0</h1>
+    <h1>📮 郵差人生模擬器 V8.0</h1>
 
     <!-- 階段 1：設定 -->
     <div id="setup-page">
@@ -187,12 +187,11 @@
 </div>
 
 <script>
-    // 專二：36級至55級對照表
     const salaryTable = {
         55: 36250, 54: 37405, 53: 38640, 52: 39885, 51: 41130,
         50: 42370, 49: 43600, 48: 44850, 47: 46090, 46: 47325,
         45: 48560, 44: 49775, 43: 50470, 42: 51190, 41: 51890,
-        40: 52590, 39: 53290, 38: 53995, 37: 54695, 36: 55395  // 碰頂
+        40: 52590, 39: 53290, 38: 53995, 37: 54695, 36: 55395
     };
 
     let player = {
@@ -209,6 +208,7 @@
 
     const MAX_STAT = 20;
 
+    // 通用事件池（完整收錄所有經典與新通用事件）
     const commonEvents = [
         {
             title: "🌧️ 突如其來的暴雨考驗",
@@ -223,6 +223,11 @@
                     text: "b) 請求稽查支援！",
                     result: "稽查拿著雨衣前來救援，雖然被酸了兩句『沒看氣象預報喔』，但成功保住了信件與身體！",
                     changes: { smart: 1, management: -1 }, addPoints: 1, grade: false
+                },
+                {
+                    text: "c) 把車子推進水溝，一了百了",
+                    result: "車子直接報銷，你因毀損公物遭到記大過懲處！",
+                    changes: { management: -4, stamina: -2 }, addPoints: 0, grade: false
                 }
             ]
         },
@@ -231,14 +236,46 @@
             desc: "午休手機滑太爽，不小心把私下的『約砲訊息』誤傳到郵局大群組（內有股長、稽查與全體同事）！",
             options: [
                 {
-                    text: "a) 按下『刪除』（只有自己看不到）",
+                    text: "按一下『刪除』（只有自己看不到）",
                     result: "慘了！你按到刪除，全群組幾百個人都看到了，成為局內傳奇社會性死亡代表！",
                     changes: { management: -4, relationship: -4 }, addPoints: 0, grade: false
                 },
                 {
-                    text: "b) 手速極快秒按『收回』，並補一句『帳號被盜/好友傳錯』",
+                    text: "手速極快秒按『收回』，並補一句『帳號被盜/好友傳錯』",
                     result: "雖然有幾個人看到，但你死不承認！靠著極強的心理素質撐過去了，大家心照不宣。",
                     changes: { smart: 2, management: -1 }, addPoints: 0, grade: false
+                }
+            ]
+        },
+        {
+            title: "🏥 身體紅燈與手術抉擇",
+            desc: "健康檢查報告出爐，醫生面色凝重地宣布你需要馬上動手術處理身體痼疾！",
+            options: [
+                {
+                    text: "一. 乖乖配合動手術",
+                    result: "住院開刀休養了一陣子，雖然花了一筆錢，但身體重獲新生，體能與狀態大為改善！",
+                    changes: { stamina: 2 }, addPoints: 1, grade: false
+                },
+                {
+                    text: "二. 不去醫院，在家硬撐休息就好",
+                    result: "病情拖久惡化，送信到一半直接暈倒送醫，差點小命不保！",
+                    changes: { stamina: -3 }, addPoints: 0, grade: false
+                }
+            ]
+        },
+        {
+            title: "💥 外出雷殘與工傷拉鋸",
+            desc: "在外送信不小心雷殘犁田，腳踝嚴重受傷！此時稽查打電話來請你「共體時艱」撐著出來上班。",
+            options: [
+                {
+                    text: "1. 好啦我去...結果舊傷復發，氣得怒告郵局！",
+                    result: "勞資糾紛搬上檯面，雖然告贏了補助，但在局裡黑到發亮，長官同事見到你都頭痛。",
+                    changes: { management: -3, relationship: -3 }, addPoints: 0, grade: false
+                },
+                {
+                    text: "2. 拒絕！申請工傷休養，隨後轉調他局繼續搞事",
+                    result: "你成功休養並轉調到隔壁分局，繼續開啟新一輪的局內傳奇生活！",
+                    changes: { smart: 2, relationship: 1 }, addPoints: 1, grade: false
                 }
             ]
         },
@@ -247,20 +284,83 @@
             desc: "一位顏值媲美明星的妹子來郵局領掛號，你看到心頭一震，此時你的內心小劇場開始作祟...",
             options: [
                 {
-                    text: "a) 拿出手機默默偷拍",
+                    text: "1. 拿出手機默默偷拍",
                     result: "被正妹當場抓包喊『有變態！』直接報警處理！你被記大過並全局通報！",
                     changes: { management: -4, relationship: -4 }, addPoints: 0, grade: false
                 },
                 {
-                    text: "b) 貪婪心爆發：偷拍 + 記住址『我要全部！』",
+                    text: "2. 去看招領單住址跟名字，暗中記下來",
+                    result: "雖然沒被抓包，但行為有點變態，良心備受譴責...",
+                    changes: { smart: -1, relationship: -1 }, addPoints: 0, grade: false
+                },
+                {
+                    text: "3. 貪婪心爆發：我要全部！（偷拍 + 記個資）",
                     result: "違規行為太誇張被民眾直接告上總公司！性騷擾成立，移送法辦，你直接被免職開除！",
                     triggerFire: true, fireReason: "因犯下嚴重個資法與性騷擾案件，遭到郵局直接免職開除！"
+                }
+            ]
+        },
+        {
+            title: "📋 關鍵回執忘了繳回",
+            desc: "結算時才發現大批雙掛號回執忘記繳回銷案，這下皮繃緊了！",
+            options: [
+                {
+                    text: "1、趕緊加班補繳",
+                    result: "雖然多花了不少時間補件，挨了內勤一頓罵，但平安過關！",
+                    changes: { management: 1 }, addPoints: 0, grade: false
+                },
+                {
+                    text: "2、塞進車廂深處假裝沒這回事",
+                    result: "被稽查抽查抓包！業務重大違失，考績直接吃丙！",
+                    changes: { management: -3 }, addPoints: 0, grade: false
                 }
             ]
         }
     ];
 
+    // 各職務專屬事件池
     const jobSpecificEvents = {
+        "外勤郵務員（混投段）": [
+            {
+                title: "⚖️ 訴訟文書的陷阱",
+                desc: "送信送到一半，民眾突然攔住你，劈頭問你有沒有他的「訴訟文書」？",
+                options: [
+                    {
+                        text: "1. 說沒有，然後直接把信送到他家",
+                        result: "被對方發現你在說謊且程序瑕疵，直接遭到投訴檢舉！",
+                        changes: { management: -2 }, addPoints: 0, grade: false
+                    },
+                    {
+                        text: "2. 說有！結果對方疑似吸毒理智不清，當場把你暴打一波",
+                        result: "掛彩送醫急診！衰到極點，好在局裡幫忙申請了公傷與慰問金。",
+                        changes: { stamina: -3, relationship: 2 }, addPoints: 0, grade: false
+                    }
+                ]
+            }
+        ],
+        "外勤郵務員（快捷包裹段）": [
+            {
+                title: "📦 中秋節包裹量暴增的煉獄",
+                desc: "中秋節檔期包裹量暴增三倍，偏偏資深同事提早排休放假，值班稽查又有嚴重口臭，你該如何應對？",
+                options: [
+                    {
+                        text: "準時下班！明天的事交給明天的我",
+                        result: "包裹堆得像山一樣留到隔天，遭到主管嚴重關切與客訴連環爆！",
+                        changes: { management: -3, stamina: 1 }, addPoints: 0, grade: false
+                    },
+                    {
+                        text: "任勞任怨，加班送到完！",
+                        result: "頂著口臭稽查的碎念與滿坑滿谷的包裹一路加班到深夜，雖然累垮但順利消化完畢！",
+                        changes: { stamina: -2, management: 2 }, addPoints: 1, grade: true
+                    },
+                    {
+                        text: "擺爛！沒送完就直接按系統亂填「不在家/地址不詳」",
+                        result: "隔天客訴電話被打爆，被稽查抓到造假，記小過一次懲處！",
+                        changes: { smart: -2, management: -3 }, addPoints: 0, grade: false
+                    }
+                ]
+            }
+        ],
         "白天接送收攬": [
             {
                 title: "📦 合作廠商爆量特大宗包裹",
@@ -311,6 +411,22 @@
                         text: "b) 拿出相關規定公事公辦解釋並幫同仁坦傷害",
                         result: "維護了局內同仁尊嚴，獲得基層同仁好感！",
                         changes: { relationship: 1 }, addPoints: 0, grade: false
+                    }
+                ]
+            },
+            {
+                title: "👤 新同事空降報到",
+                desc: "他局調來一位新同事，聽說背景硬、脾氣古怪又非常難相處，大家避之唯恐不及。你決定怎麼應對？",
+                options: [
+                    {
+                        text: "1. 阿諛奉承",
+                        result: "你選擇奉承這位空降新同事，成功和他建立極佳的關係；但其他基層下屬看在眼裡，覺得你趨炎附勢、雙面人，導致大家對你怨聲載道！",
+                        changes: { management: 1, relationship: -3 }, addPoints: 0, grade: false
+                    },
+                    {
+                        text: "2. 按規矩行事",
+                        result: "你保持不卑不亢的態度，一切按照局內規章與流程走。雖然新同事起初有些微詞，但也挑不出毛病，基層同仁也對你公正的態度表示尊重。",
+                        changes: { smart: 1, management: 1 }, addPoints: 0, grade: false
                     }
                 ]
             }
@@ -435,12 +551,18 @@
         player.points += 1;
 
         let evtPool = [...commonEvents];
-        if (jobSpecificEvents[player.role] && Math.random() < 0.5) {
-            evtPool = jobSpecificEvents[player.role];
+        if (jobSpecificEvents[player.role] && Math.random() < 0.6) {
+            let specificPool = jobSpecificEvents[player.role];
+            let evt = specificPool[Math.floor(Math.random() * specificPool.length)];
+            triggerEvent(evt);
+            return;
         }
 
         let evt = evtPool[Math.floor(Math.random() * evtPool.length)];
+        triggerEvent(evt);
+    }
 
+    function triggerEvent(evt) {
         document.getElementById("event-title").innerText = `📅 【${player.age} 歲】 ${evt.title}`;
         document.getElementById("event-desc").innerText = evt.desc;
 
@@ -481,7 +603,7 @@
             }
         }
 
-        if (opt.addPoints > 0) {
+        if (opt.addPoints && opt.addPoints > 0) {
             player.points += opt.addPoints;
             changeLogs.push(`獲得額外點數 +${opt.addPoints}`);
         }
