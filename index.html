@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>郵務人生模擬器 V3.9</title>
+    <title>郵務人生模擬器 V4.0</title>
     <style>
         :root {
             --green-main: #008751;
@@ -83,7 +83,7 @@
 <body>
 
 <div class="container">
-    <h1>📮 郵務人生模擬器 V3.9</h1>
+    <h1>📮 郵務人生模擬器 V4.0</h1>
 
     <!-- 階段 1：設定 -->
     <div id="setup-page">
@@ -98,8 +98,8 @@
         <div class="setup-group">
             <label for="player-section">進局初次分發選擇（分段）：</label>
             <select id="player-section">
-                <option value="快捷包裹段">1. 快捷包裹段（重包裹多、時效緊迫、重視體能與應變）</option>
-                <option value="混投段">2. 混投段（平信/掛號/包裹混投、路段複雜、重視熟練與人緣）</option>
+                <option value="混投段">1. 混投段（平信/掛號/包裹混投、路段複雜、重視熟練與人緣）</option>
+                <option value="快捷包裹段">2. 快捷包裹段（重包裹多、時效緊迫、重視體能與應變）</option>
             </select>
         </div>
         <div class="setup-group">
@@ -180,7 +180,7 @@
 
 <script>
     let player = {
-        name: "", code: "A", section: "快捷包裹段", age: 18, startAge: 18, role: "外勤郵務員",
+        name: "", code: "A", section: "混投段", age: 18, startAge: 18, role: "外勤郵務員",
         points: 3,
         stats: { stamina: 10, route: 10, management: 10, smart: 10, relationship: 10 },
         delivered: 0, gradeA: 0,
@@ -191,70 +191,54 @@
 
     const MAX_STAT = 20;
 
-    // 分段與半夜班專屬事件庫
+    // 分段與半夜班專屬事件庫（已新增你指定的混投段事件）
     const roleEvents = {
         "混投段": [
             {
-    title: "📜 消失的門牌與無名掛號",
-    desc: "你手上有張催繳稅單掛號，地址寫著「100號」，但現場100號因為幾年前拆遷變成空地，旁邊只有102號住戶在看電視。",
-    options: [
-        {
-            text: "a) 開立招領單投遞至102號信箱，走標準流程",
-            result: "流程完全合規！雖然民眾要多跑一趟郵局領信，但幫自己省去投遞爭議與責任。",
-            changes: { smart: 1 }, addPoints: 1, grade: false
-        },
-        {
-            text: "b) 主動開口問102號住戶，幫忙聯繫原屋主",
-            result: "鄰居阿姨熱心幫你打給原屋主！信件成功簽收，住戶直誇郵差真有耐心，獲得熱心口碑！",
-            changes: { relationship: 2, route: 1 }, addPoints: 1, grade: true
-        }
-    ]
-},
-{
-    title: "🐝 住宅區巷弄的黃蜂危機",
-    desc: "在送信途中，你發現某戶三樓信箱旁的樹枝上有個籃球大的胡蜂巢，而且信箱就在正下方！",
-    options: [
-        {
-            text: "a) 展現快手功力，快速丟完信件火速騎走",
-            result: "雖然沒被螫到，但險象環生，心跳直接飆到180，嚇掉半條命。",
-            changes: { stamina: 1, smart: -1 }, addPoints: 0, grade: false
-        },
-        {
-            text: "b) 拍照回報稽查，並貼溫馨提醒貼紙至巷口",
-            result: "里長大讚你的警覺心並立刻找消防隊處理，鄰居紛紛感謝你救了大家！",
-            changes: { relationship: 2, management: 1 }, addPoints: 1, grade: true
-        }
-    ]
-},
-{
-    title: "🧧 老阿嬤的溫暖紅包",
-    desc: "大熱天送掛號到老舊公寓，獨居的獨眼老阿嬤開門拿了信後，堅持要塞一罐冰麥仔茶跟100元紅包給你喝水。",
-    options: [
-        {
-            text: "a) 堅決婉拒紅包，只拿麥仔茶並鞠躬致謝",
-            result: "展現了廉潔與親切！老阿嬤到處跟鄰居誇獎你，人緣度大提升！",
-            changes: { relationship: 2, smart: 1 }, addPoints: 1, grade: true
-        },
-        {
-            text: "b) 嚴肅拒絕並宣導公務人員公務員廉政倫理規範",
-            result: "阿嬤被你的嚴肅嚇到了，場面一度極度尷尬...",
-            changes: { relationship: -1, management: 1 }, addPoints: 0, grade: false
-        }
-    ]
-}
-            {
-                title: "📮 混投段：門牌混亂與凶惡惡犬",
-                desc: "今天送到老舊巷弄，門牌亂七八糟，甚至還有一隻沒繫繩的黑狗衝出來！",
+                title: "📜 消失的門牌與無名掛號",
+                desc: "你手上有張催繳稅單掛號，地址寫著「100號」，但現場100號因為幾年前拆遷變成空地，旁邊只有102號住戶在看電視。",
                 options: [
                     {
-                        text: "a) 拿郵件包擋住，冷靜慢慢後退",
-                        result: "順利避開咬傷，展現良好應變能力。",
-                        changes: { smart: 1 }, addPoints: 1, grade: true
+                        text: "a) 開立招領單投遞至102號信箱，走標準流程",
+                        result: "流程完全合規！雖然民眾要多跑一趟郵局領信，但幫自己省去投遞爭議與責任。",
+                        changes: { smart: 1 }, addPoints: 1, grade: false
                     },
                     {
-                        text: "b) 大聲跟住戶求救並反應路段狀況",
-                        result: "熱心鄰居出來幫忙拉住狗，順便指引正確門牌，人緣提升！",
-                        changes: { relationship: 1 }, addPoints: 1, grade: false
+                        text: "b) 主動開口問102號住戶，幫忙聯繫原屋主",
+                        result: "鄰居阿姨熱心幫你打給原屋主！信件成功簽收，住戶直誇郵差真有耐心，獲得熱心口碑！",
+                        changes: { relationship: 2, route: 1 }, addPoints: 1, grade: true
+                    }
+                ]
+            },
+            {
+                title: "🐝 住宅區巷弄的黃蜂危機",
+                desc: "在送信途中，你發現某戶三樓信箱旁的樹枝上有個籃球大的胡蜂巢，而且信箱就在正下方！",
+                options: [
+                    {
+                        text: "a) 展現快手功力，快速丟完信件火速騎走",
+                        result: "雖然沒被螫到，但險象環生，心跳直接飆到180，嚇掉半條命。",
+                        changes: { stamina: 1, smart: -1 }, addPoints: 0, grade: false
+                    },
+                    {
+                        text: "b) 拍照回報稽查，並貼溫馨提醒貼紙至巷口",
+                        result: "里長大讚你的警覺心並立刻找消防隊處理，鄰居紛紛感謝你救了大家！",
+                        changes: { relationship: 2, management: 1 }, addPoints: 1, grade: true
+                    }
+                ]
+            },
+            {
+                title: "🧧 老阿嬤的溫暖紅包",
+                desc: "大熱天送掛號到老舊公寓，獨居的獨眼老阿嬤開門拿了信後，堅持要塞一罐冰麥仔茶跟100元紅包給你喝水。",
+                options: [
+                    {
+                        text: "a) 堅決婉拒紅包，只拿麥仔茶並鞠躬致謝",
+                        result: "展現了廉潔與親切！老阿嬤到處跟鄰居誇獎你，人緣度大提升！",
+                        changes: { relationship: 2, smart: 1 }, addPoints: 1, grade: true
+                    },
+                    {
+                        text: "b) 嚴肅拒絕並宣導公務人員公務員廉政倫理規範",
+                        result: "阿嬤被你的嚴肅嚇到了，場面一度極度尷尬...",
+                        changes: { relationship: -1, management: 1 }, addPoints: 0, grade: false
                     }
                 ]
             },
@@ -269,24 +253,24 @@
                     },
                     {
                         text: "b) 戰術性撤退，掏出隨身準備的狗零食",
-                        result: "黑狗瞬間變成乖狗狗。你成功收買了這條巷子的「老大」，以後來送信再也沒被咬過，人緣與應變提升！",
+                        result: "黑狗瞬間變成乖狗狗。你成功收買了這條巷子的「老大」，以後來送信再也沒被咬過！",
                         changes: { smart: 1, relationship: 1 }, addPoints: 1, grade: true
                     }
                 ]
             },
             {
-                title: "🏘️ 迷航危機：新建案重劃區",
-                desc: "今天代班跑一個全新重劃區的混投段，門牌跳號嚴重，導航完全找不到，信件還剩一大疊！",
+                title: "🌧️ 颱風天前的郵務總動員",
+                desc: "颱風即將登陸，局長下令今天要把所有平信與掛號「清班」，大家都面露難色。",
                 options: [
                     {
-                        text: "a) 靠直覺硬繞，發揮土法煉鋼精神",
-                        result: "你在太陽下多繞了兩小時才送完，累得半死，但把這區的路線徹底刻進腦海裡了！",
-                        changes: { stamina: -1, route: 2 }, addPoints: 0, grade: false
+                        text: "a) 主動承擔多餘路段，幫忙體力不支的資深同事",
+                        result: "你成為局裡的熱心擔當！同事們無不感激，長官也默默記上記錄。",
+                        changes: { relationship: 2, stamina: 1 }, addPoints: 1, grade: true
                     },
                     {
-                        text: "b) 停下來詢問當地的房屋仲介跟管理員",
-                        result: "你發揮社交天賦，跟管理員大哥抽根菸請教。不僅秒懂門牌邏輯，還順便建立了良好關係！",
-                        changes: { relationship: 1, route: 1 }, addPoints: 1, grade: true
+                        text: "b) 按部就班送完自己的責任區，不貪多也不拖延",
+                        result: "穩定輸出，平安歸隊，展現了良好的自我管理能力。",
+                        changes: { smart: 1, route: 1 }, addPoints: 0, grade: false
                     }
                 ]
             }
@@ -303,24 +287,40 @@
                     },
                     {
                         text: "b) 智慧應對，打電話請客戶幫忙搬一半",
-                        result: "你用誠懇（帶點威脅）的語氣說服客戶下樓分擔。保住了腰，但客戶碎碎唸了一下，稍微影響考績潛力。",
+                        result: "你用誠懇的語氣說服客戶下樓分擔。保住了腰，但客戶碎碎唸了一下。",
                         changes: { smart: 1, management: -1 }, addPoints: 1, grade: false
                     }
                 ]
             },
             {
-                title: "🤬 奧客降臨：無厘頭客訴",
-                desc: "有民眾打客服投訴你：「那個郵差送信時看了我一眼，眼神很不友善！」稽查無奈地把你叫去問話。",
+                title: "🚚 車頂過高危機！地下室極限挑戰",
+                desc: "這件快捷包裹註明要送進商辦地下室卸貨區，但地下室限高只有1.9公尺，你的車頂載物後好像有點危險...",
                 options: [
                     {
-                        text: "a) 據理力爭，跟稽查拍桌抱怨民眾太瞎",
-                        result: "稽查被你噴得啞口無言，雖然同事在背後為你叫好，但長官覺得你難以管理。",
-                        changes: { relationship: 1, management: -2 }, addPoints: 0, grade: false
+                        text: "a) 憑感覺跟駕駛技術，一口氣衝進去！",
+                        result: "咔啦！車頂冷氣孔直接撞到消防管道！賠錢事小，報告寫不完...",
+                        changes: { stamina: -1, management: -2 }, addPoints: 0, grade: false
                     },
                     {
-                        text: "b) 委曲求全，寫一份完美的制式報告交差",
-                        result: "你熟練地寫出滿篇官話的報告，成功幫長官擋下麻煩。稽查對你的「大局觀」十分讚賞！",
-                        changes: { management: 2, smart: 1 }, addPoints: 1, grade: true
+                        text: "b) 停在地下室入口，拉推車下地下室辦理",
+                        result: "雖然多花了一些體力跟時間，但安全下莊，沒造成局裡資產損失。",
+                        changes: { stamina: 1, smart: 1 }, addPoints: 1, grade: true
+                    }
+                ]
+            },
+            {
+                title: "⚡ 雙十一海量爆量包裹",
+                desc: "雙十一電商購物節來臨，今天局裡的包裹堆得像一座小山，看著爆滿的籃車，你決定怎麼處理？",
+                options: [
+                    {
+                        text: "a) 開啟狂暴模式！加班拚當天全部清空",
+                        result: "你成為當天最早清完包裹的勇士，獲得長官高度讚賞，但也累得隔天腰酸背痛。",
+                        changes: { stamina: 2, management: 1 }, addPoints: 1, grade: true
+                    },
+                    {
+                        text: "b) 規劃最優化路線，並與鄰段同事互相支援",
+                        result: "你發揮路線規劃長才，跟同事組隊互相幫忙，順利在合理時間內送完，大家感情更融洽！",
+                        changes: { route: 2, relationship: 1 }, addPoints: 1, grade: true
                     }
                 ]
             }
@@ -347,7 +347,7 @@
         },
         {
             title: "🛒 雙籃車衝刺月台慘案",
-            desc: "半夜為了趕時間下班，你圖方便打算「一次直接推兩台籃車」進月台，結果重重心配重失衡...",
+            desc: "半夜為了趕時間下班，你圖方便打算「一次直接推兩台籃車」進月台，結果重重重心失衡...",
             options: [
                 {
                     text: "a) 硬幹拉住！試圖靠蠻力硬壓",
@@ -464,7 +464,7 @@
         if (opt.changes) {
             for (let key in opt.changes) {
                 player.stats[key] += opt.changes[key];
-                let nameMap = { stamina: "體能", route: "路線", management: "向上管理", smart: "處事應變", relationship: "人緣" };
+                let nameMap = { stamina: "體能", route: "路線", management: "向上管理", smart: "處事應变", relationship: "人緣" };
                 let valStr = opt.changes[key] > 0 ? `+${opt.changes[key]}` : `${opt.changes[key]}`;
                 changeLogs.push(`${nameMap[key]} ${valStr}`);
             }
