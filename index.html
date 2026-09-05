@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>郵務人生模擬器 V4.0</title>
+    <title>郵務人生模擬器 V5.0</title>
     <style>
         :root {
             --green-main: #008751;
@@ -89,7 +89,7 @@
 <body>
 
 <div class="container">
-    <h1>📮 郵務人生模擬器 V4.0</h1>
+    <h1>📮 郵務人生模擬器 V5.0</h1>
 
     <!-- 階段 1：設定 -->
     <div id="setup-page">
@@ -326,13 +326,13 @@
                 desc: "半夜搬運大宗郵袋，夜班大司機走近你身邊皺眉：「靠，你身上汗味很重欸！」",
                 options: [
                     {
-                        text: "a) 請司機喝伯朗咖啡：「哥，半夜體力活辛苦啦！」",
-                        result: "司機接過咖啡笑出來，還幫忙分擔搬了兩袋！",
-                        changes: { relationship: 1, smart: 1 }, addPoints: 1, grade: true
+                        text: "a) 向股長抱怨，宣稱該司機很難配合",
+                        result: "股長出面協調，但也讓局內管理層注意到爭執，向上管理與人緣受到影響。",
+                        changes: { management: -1, relationship: -1 }, addPoints: 0, grade: false
                     },
                     {
                         text: "b) 默默吞下，尷尬地笑笑退後一步",
-                        result: "氣氛稍微有點尷尬，人緣受影響。",
+                        result: "氣氛稍微有點尷尬，但保全了職場和氣。",
                         changes: { relationship: -1 }, addPoints: 0, grade: false
                     }
                 ]
@@ -518,7 +518,7 @@
 
         let codeNameMap = {
             "A": "【天賦 A：路線敏銳】",
-            "B": "【天賦 B：靈敏應变】",
+            "B": "【天賦 B：靈敏應變】",
             "C": "【天賦 C：鋼鐵體魄】"
         };
 
