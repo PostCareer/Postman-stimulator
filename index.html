@@ -459,12 +459,77 @@
         updateUI();
     }
 
-    function processChoice(opt) {
+   function processChoice(opt) {
         if (opt.triggerFire) {
             player.isFired = true;
             player.firedReason = opt.fireReason;
             endGame(false);
             return;
+        }
+
+        let changeLogs = [];
+        let isMajorPunished = false; // 是否被記大過標記
+
+        if (opt.changes) {
+            for (let key in opt.changes) {
+                player.stats[key] += opt.changes[key];
+                let nameMap = { stamina: "體能", route: "路線", management: "向上管理", smart: "處事應變", relationship: "人緣" };
+                let valStr = opt.changes[key] > 0 ? `+${opt.changes[key]}` : `${opt.changes[key]}`;
+                changeLogs.push(`${nameMap[key]} ${valStr}`);
+                
+                // 判斷是否有嚴重懲處（向上管理或人緣一次被扣 3 分以上視為大過）
+                if (opt.changes[key] <= -3) {
+                    isMajorPunished = true;
+                }
+            }
+        }
+
+        if (opt.addPoints > 0) {
+            player.points += opt.addPoints;
+            changeLogs.push(`獲得額外點數 +${opt.addPoints}`);
+        }
+
+        // 計算當年薪資與晉級
+        let currentMonthly = salaryTable[player.salaryGrade] || 36250;
+        let yearlyIncome = 0;
+
+        if (isMajorPunished) {
+            // 被記大過懲罰：考績丙等、不予晉薪（不跳級）、無年終考績獎金（僅領12個月）
+            yearlyIncome = currentMonthly * 12;
+            changeLogs.push(`⚠️ 當年遭記大過懲處（考績丙等）：【不予晉薪】，當年的年終與考績獎金全額泡湯！`);
+        } else {
+            // 正常狀況：領 16.5 個月年薪
+            yearlyIncome = Math.floor(currentMonthly * 16.5);
+            
+            if (opt.grade) {
+                player.gradeA++;
+                changeLogs.push(`獲得考績甲等`);
+            }
+
+            // 晉升薪級
+            if (player.salaryGrade > 36) {
+                player.salaryGrade--;
+                changeLogs.push(`薪級升至第 ${player.salaryGrade} 級`);
+            } else {
+                changeLogs.push(`已達專二碰頂最高薪級 (第 36 級)`);
+            }
+        }
+
+        player.totalEarnings += yearlyIncome;
+        changeLogs.push(`今年實領總年薪：$${yearlyIncome.toLocaleString()}`);
+
+        player.delivered += Math.floor(player.stats.route * 1200 + 8000);
+
+        let logText = `📢 <b>【選擇結果】</b><br>${opt.result}<br><br><b>📈 結算：</b> ${changeLogs.join(" | ")}`;
+        document.getElementById("choices-container").innerHTML = "";
+        document.getElementById("log-container").innerHTML = `<div class="log-box">${logText}</div>`;
+
+        player.age++;
+        
+        let mainBtn = document.getElementById("btn-main");
+        mainBtn.classList.remove("hidden");
+        updateUI();
+    }
         }
 
         let changeLogs = [];
