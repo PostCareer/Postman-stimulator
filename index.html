@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>郵差人生模擬器 V8.0 終極完整版</title>
+    <title>郵差人生模擬器 V9.0 終極擴充版</title>
     <style>
         :root {
             --green-main: #008751;
@@ -89,7 +89,7 @@
 <body>
 
 <div class="container">
-    <h1>📮 郵差人生模擬器 V8.0</h1>
+    <h1>📮 郵差人生模擬器 V9.0</h1>
 
     <!-- 階段 1：設定 -->
     <div id="setup-page">
@@ -208,7 +208,7 @@
 
     const MAX_STAT = 20;
 
-    // 通用事件池（完整收錄所有經典與新通用事件）
+    // 通用事件池（完整收錄經典、新通用事件與擴充事件）
     const commonEvents = [
         {
             title: "🌧️ 突如其來的暴雨考驗",
@@ -315,6 +315,70 @@
                     changes: { management: -3 }, addPoints: 0, grade: false
                 }
             ]
+        },
+        {
+            title: "🐶 投遞途中遭遇惡犬死角埋伏",
+            desc: "送信到一處透天厝，鐵門一開突然衝出一隻兇猛的大黑狗狂吠猛追，你當場嚇出一身冷汗！",
+            options: [
+                {
+                    text: "a) 丟下手邊郵件拔腿狂奔，鞋子還跑掉一隻",
+                    result: "雖然成功保住小命，但郵件散落滿地，被飼主與路人拍下影片檢舉狼狽相。",
+                    changes: { stamina: -1, management: -2 }, addPoints: 0, grade: false
+                },
+                {
+                    text: "b) 冷靜拿出手上的大宗投遞單當盾牌，邊退邊喝斥",
+                    result: "展現驚人的心理素質與應變能力，黑狗竟然被你的氣勢嚇退了！",
+                    changes: { smart: 2, stamina: 1 }, addPoints: 1, grade: false
+                }
+            ]
+        },
+        {
+            title: "🍱 團購美食與職場排擠大戰",
+            desc: "局裡最近流行揪團訂下午茶，但主揪的資深前輩看你很不順眼，故意裝作沒問你要不要一起訂。",
+            options: [
+                {
+                    text: "1. 當作無所謂，自己跑去隔壁買超商珍奶",
+                    result: "樂得清閒，省得跟局裡的派系鬥爭勾心鬥角。",
+                    changes: { smart: 1 }, addPoints: 0, grade: false
+                },
+                {
+                    text: "2. 當眾大聲酸前輩「揪團排擠人喔？」",
+                    result: "場面瞬間降到冰點！雖然爽快了一秒，但從此在局裡被徹底邊緣化。",
+                    changes: { relationship: -3, management: -1 }, addPoints: 0, grade: false
+                }
+            ]
+        },
+        {
+            title: "☀️ 酷暑高溫假與熱中暑危機",
+            desc: "夏日氣溫飆破 38 度，外送送信不到半小時就汗如雨下，頭暈目眩快要暈倒了！",
+            options: [
+                {
+                    text: "a) 硬撐下去，拼了老命把信送完再說",
+                    result: "結果真的中暑倒在路邊，被熱心民眾叫救護車送醫，白白受罪。",
+                    changes: { stamina: -3 }, addPoints: 0, grade: false
+                },
+                {
+                    text: "b) 尋找便利商店躲進去吹冷氣喝運動飲料休息",
+                    result: "雖然拖慢了進度，但保住了寶貴的性命與健康，安全第一！",
+                    changes: { smart: 1, stamina: 1 }, addPoints: 1, grade: false
+                }
+            ]
+        },
+        {
+            title: "🧓 巷口阿嬤的靈魂拷問",
+            desc: "送信經過巷口時，熟識的鄰居阿嬤突然攔住你，開始瘋狂推銷她孫子的直銷保養品與神祕生機飲食。",
+            options: [
+                {
+                    text: "1. 花錢消災，掏腰包買一組當作做國民外交",
+                    result: "荷包大失血，還吃了一肚子神祕健康食品，但阿嬤逢人就誇你是好青年。",
+                    changes: { relationship: 2, smart: -1 }, addPoints: 0, grade: false
+                },
+                {
+                    text: "2. 假裝無線電響起，大喊「局長找我急件！」秒溜走",
+                    result: "演技精湛成功脫身，完美避開一場錢財與精神的折磨。",
+                    changes: { smart: 2 }, addPoints: 1, grade: false
+                }
+            ]
         }
     ];
 
@@ -334,6 +398,22 @@
                         text: "2. 說有！結果對方疑似吸毒理智不清，當場把你暴打一波",
                         result: "掛彩送醫急診！衰到極點，好在局裡幫忙申請了公傷與慰問金。",
                         changes: { stamina: -3, relationship: 2 }, addPoints: 0, grade: false
+                    }
+                ]
+            },
+            {
+                title: "📬 迷路的信件與神祕檢舉函",
+                desc: "分信時發現有一封署名要給局長、內容極其辛辣的「神祕內部檢舉函」，不小心被你瞄到了內容...",
+                options: [
+                    {
+                        text: "1. 默默裝作沒看到，按規定投入局長室信箱",
+                        result: "明哲保身，局裡後來掀起什麼風浪也與你無關，平安過完一天。",
+                        changes: { smart: 1 }, addPoints: 0, grade: false
+                    },
+                    {
+                        text: "2. 偷偷拍照傳到私人小群組八卦",
+                        result: "不小心流傳出去引發全局大地震！被查出來是你外流的，長官對你印象慘跌谷底。",
+                        changes: { management: -4, relationship: -2 }, addPoints: 0, grade: false
                     }
                 ]
             }
@@ -357,6 +437,22 @@
                         text: "擺爛！沒送完就直接按系統亂填「不在家/地址不詳」",
                         result: "隔天客訴電話被打爆，被稽查抓到造假，記小過一次懲處！",
                         changes: { smart: -2, management: -3 }, addPoints: 0, grade: false
+                    }
+                ]
+            },
+            {
+                title: "📦 重型易碎品當場破裂慘案",
+                desc: "搬運一個標註「絕對易碎・精品陶瓷」的大箱子時，不小心手滑從車上摔落，裡面傳出清脆的碎裂聲...",
+                options: [
+                    {
+                        text: "a) 當作沒事照常投遞，讓收件人簽收",
+                        result: "收件人一拆包裹氣炸直接投訴總公司！你面臨重大違失懲處。",
+                        changes: { management: -3, smart: -1 }, addPoints: 0, grade: false
+                    },
+                    {
+                        text: "b) 主動回報局內並依照流程走破損賠償程序",
+                        result: "雖然挨了主管一頓念，並寫了落長的檢討報告，但展現誠實負責的態度。",
+                        changes: { management: 1, smart: 1 }, addPoints: 0, grade: false
                     }
                 ]
             }
@@ -420,7 +516,7 @@
                 options: [
                     {
                         text: "1. 阿諛奉承",
-                        result: "你選擇奉承這位空降新同事，成功和他建立極佳的關係；但其他基層下屬看在眼裡，覺得你趨炎附勢、雙面人，導致大家對你怨聲載道！",
+                        result: "你選擇奉承這位空降新同事，成功和他建立極佳的關係；但其他基層下屬看 in 眼裡，覺得你趨炎附勢、雙面人，導致大家對你怨聲載道！",
                         changes: { management: 1, relationship: -3 }, addPoints: 0, grade: false
                     },
                     {
@@ -505,24 +601,35 @@
 
         let availableNotice = [];
 
-        if (yearsOfService > 0 && yearsOfService % 3 === 0 && !player.examPassed) {
-            btnExam.classList.remove("hidden");
-            availableNotice.push("📝 總公司舉辦 3 年一度的內部升遷大考，可報考轉內勤！");
-        }
+        // 一旦當上郵務稽查，直到退休都不用競爭其他位置，除非是白天收攬
+        if (player.role === "郵務稽查") {
+            if (Math.random() < 0.20) {
+                btnDay.classList.remove("hidden");
+                availableNotice.push("☀️ 局內『白天接送收攬』有空缺！是否考慮轉任？");
+            } else {
+                jobSection.classList.add("hidden");
+                return;
+            }
+        } else {
+            if (yearsOfService > 0 && yearsOfService % 3 === 0 && !player.examPassed) {
+                btnExam.classList.remove("hidden");
+                availableNotice.push("📝 總公司舉辦 3 年一度的內部升遷大考，可報考轉內勤！");
+            }
 
-        if (yearsOfService >= 5 && player.role !== "半夜接送收攬" && Math.random() < 0.40) {
-            btnNight.classList.remove("hidden");
-            availableNotice.push("🌙 局內『半夜接送收攬』有空缺！");
-        }
+            if (yearsOfService >= 5 && player.role !== "半夜接送收攬" && Math.random() < 0.40) {
+                btnNight.classList.remove("hidden");
+                availableNotice.push("🌙 局內『半夜接送收攬』有空缺！");
+            }
 
-        if (yearsOfService >= 10 && player.role !== "白天接送收攬" && Math.random() < 0.24) {
-            btnDay.classList.remove("hidden");
-            availableNotice.push("☀️ 局內『白天接送收攬』有空缺！");
-        }
+            if (yearsOfService >= 10 && player.role !== "白天接送收攬" && Math.random() < 0.24) {
+                btnDay.classList.remove("hidden");
+                availableNotice.push("☀️ 局內『白天接送收攬』有空缺！");
+            }
 
-        if (yearsOfService >= 15 && player.role !== "郵務稽查" && Math.random() < 0.30) {
-            btnInspector.classList.remove("hidden");
-            availableNotice.push("🔍 局內『郵務稽查』開放競爭！");
+            if (yearsOfService >= 15 && player.role !== "郵務稽查" && Math.random() < 0.30) {
+                btnInspector.classList.remove("hidden");
+                availableNotice.push("🔍 局內『郵務稽查』開放競爭！");
+            }
         }
 
         if (availableNotice.length > 0) {
