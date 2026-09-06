@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>郵差人生模擬器 V11.0 究極優化版</title>
+    <title>郵差人生模擬器 V11.1 隨機嗜好版</title>
     <style>
         :root {
             --green-main: #008751;
@@ -97,7 +97,7 @@
 <body>
 
 <div class="container">
-    <h1>📮 郵差人生模擬器 V11.0</h1>
+    <h1>📮 郵差人生模擬器 V11.1</h1>
 
     <div id="setup-page-1">
         <h3>Step 1: 基本角色資料</h3>
@@ -215,7 +215,7 @@
         examPassed: false,
         isFired: false,
         firedReason: "",
-        badHabit: null // "smoke" 或 "betel" 或 null
+        badHabit: null
     };
 
     const MIN_STAT = 1;
@@ -224,7 +224,7 @@
     const whyPostTemplates = [
         (job, age, workYrs) => `在上一份「${job}」行業打滾了約 ${workYrs} 年，每日承受血汗加班與薪資凍漲的摧殘。為了尋求穩定的生活保障與合理的勞動環境，你終於下定決心報考中華郵政，正式展開郵務士人生！`,
         (job, age, workYrs) => `厭倦了過去擔任「${job}」時無止盡的責任制與慣老闆壓榨。聽說郵局生活相對單純、見紅就休又有國營鐵飯碗保障，你毅然決然閉關苦讀，誓死拼上這局！`,
-        (job, age, workYrs) => `曾經以為「${job}」這條路能走得長久，卻發現現實狠狠打了臉。眼看年紀漸增，為了給自己一個安定未來，你決定脫下前一份制服，換穿綠衣郵差大顯身手。`,
+        (job, age, workYrs) => `曾經以為「${job}」這條路能走得長久，卻發現現實狠狠打了臉。眼看年紀漸增，為了給自己一個安定未來，你決定脫下前一份制服，換穿綠衣郵差大顯身手！`,
         (job, age, workYrs) => `身邊朋友紛紛上岸當公務員與國營職員，讓你再也坐不住。告別了過去的「${job}」生涯，你發誓要靠實力考進中華郵政，重新奪回人生主導權！`,
         (job, age, workYrs) => `每天待在室內做「${job}」做到懷疑人生，嚮往在外趴趴走又不用看客戶臉色。於是你狠下心來報考郵局外勤，準備用雙腿與油門征服大街小巷！`
     ];
@@ -352,8 +352,8 @@
 
     const badHabitEvents = [
         {
-            title: "🚬 不良嗜好危機：菸癮發作",
-            desc: "工作壓力大，你在分信空檔忍不住狂抽菸，被同事和民眾側目。",
+            title: "🚬 不良嗜好危機：菸癮上身",
+            desc: "工作壓力日漸沉重，你在分信空檔跟著老鳥學抽菸，漸漸地離不開尼古丁了。",
             options: [
                 {
                     text: "下定決心參加局內戒菸門診！嘗試戒除不良嗜好",
@@ -368,8 +368,8 @@
             ]
         },
         {
-            title: "🌰 不良嗜好危機：檳榔嘴發作",
-            desc: "長時間騎車精神不濟，你靠著嚼檳榔提神，嘴紅紅的被稽查念了一頓。",
+            title: "🌰 不良嗜好危機：檳榔嘴上身",
+            desc: "長時間騎車精神不濟，同行前輩塞給你一顆檳榔提神，從此你也開始嚼起了檳榔。",
             options: [
                 {
                     text: "咬牙忍耐戒除檳榔，改吃口香糖！",
@@ -483,7 +483,7 @@
                         changes: { management: -2, stamina: -1 }, addPoints: 0, grade: false
                     },
                     {
-                        text: "c) 在路上顧路的是我不是修車廠他們當然覺得沒問題",
+                        text: "c) 在路上顧路的是我不是修車廠他們壇覺得沒問題",
                         result: "群組瞬間一片安靜！雖然道盡基層心聲，但主管覺得你頂撞長官，黑掉了一大半。",
                         changes: { relationship: -3, management: -2 }, addPoints: 0, grade: false
                     }
@@ -576,17 +576,8 @@
         player.section = document.getElementById("player-section").value;
         player.code = document.getElementById("player-code").value;
 
-        // 不良嗜好隨機配置 (30% 抽菸, 10% 檳榔)
-        let habitRoll = Math.random();
-        if (habitRoll < 0.30) {
-            player.badHabit = "smoke";
-            player.stats.stamina -= 5;
-        } else if (habitRoll < 0.40) {
-            player.badHabit = "betel";
-            player.stats.stamina -= 8;
-        } else {
-            player.badHabit = null;
-        }
+        // 起始時沒有不良嗜好，改由遊戲過程中隨機發生
+        player.badHabit = null;
 
         let workYears = Math.max(1, player.startAge - 18 - 2);
         let randomTemplate = whyPostTemplates[Math.floor(Math.random() * whyPostTemplates.length)];
@@ -604,7 +595,6 @@
         if (player.code === "B") { player.stats.smart += 1; }
         if (player.code === "C") { player.stats.stamina += 1; }
 
-        // 確保屬性開局不低於最低值
         for (let key in player.stats) {
             if (player.stats[key] < MIN_STAT) player.stats[key] = MIN_STAT;
             if (player.stats[key] > MAX_STAT) player.stats[key] = MAX_STAT;
@@ -613,14 +603,10 @@
         document.getElementById("setup-page-1").classList.add("hidden");
         document.getElementById("game-page").classList.remove("hidden");
 
-        let habitDesc = "";
-        if (player.badHabit === "smoke") habitDesc = "<br><span style='color:#d32f2f;'>⚠️ 【帶有不良嗜好：抽菸】體力指數 -5，每年額外花費 3.6 萬元。</span>";
-        if (player.badHabit === "betel") habitDesc = "<br><span style='color:#d32f2f;'>⚠️ 【帶有不良嗜好：吃檳榔】體力指數 -8，每年額外花費 6 萬元。</span>";
-
         document.getElementById("prologue-container").innerHTML = `
             <div class="prologue-box">
                 📜 <b>【入職心路歷程】</b><br>
-                你今年 <b>${player.startAge}</b> 歲。${player.whyPost} ${habitDesc}
+                你今年 <b>${player.startAge}</b> 歲。${player.whyPost}
             </div>
         `;
 
@@ -726,16 +712,13 @@
         if (player.age >= 65 || player.isFired) { endGame(false); return; }
 
         let prologueBox = document.getElementById("prologue-container");
-        if (prologueBox) {
-            prologueBox.innerHTML = "";
-        }
+        if (prologueBox) { prologueBox.innerHTML = ""; }
 
         document.getElementById("btn-main").classList.add("hidden");
         document.getElementById("log-container").innerHTML = "";
 
         player.points += 1;
 
-        // 檢查是否有屬性觸發最低值解職
         for (let key in player.stats) {
             if (player.stats[key] <= MIN_STAT) {
                 player.isFired = true;
@@ -752,19 +735,31 @@
             }
         }
 
-        // 事件池選擇 (入職前三年菜鳥包、超過50歲老鳥包、不良嗜好事件)
+        // 檢查隨機不良嗜好事件（如果目前沒有不良嗜好）
+        if (!player.badHabit) {
+            let roll = Math.random();
+            // 檳榔 15% (0.00 ~ 0.15)
+            if (roll < 0.15) {
+                player.badHabit = "betel";
+                player.stats.stamina -= 8;
+                triggerEvent(badHabitEvents[1]); // 檳榔事件
+                return;
+            } 
+            // 抽菸 15% (0.15 ~ 0.30)
+            else if (roll < 0.30) {
+                player.badHabit = "smoke";
+                player.stats.stamina -= 5;
+                triggerEvent(badHabitEvents[0]); // 抽菸事件
+                return;
+            }
+        }
+
         let yearsOfService = player.age - player.startAge;
         let evtPool = [...commonEvents];
 
-        if (yearsOfService < 3) {
-            evtPool = evtPool.concat(rookieEvents);
-        }
-        if (player.age >= 50) {
-            evtPool = evtPool.concat(seniorEvents);
-        }
-        if (player.badHabit && Math.random() < 0.4) {
-            evtPool = evtPool.concat(badHabitEvents);
-        }
+        if (yearsOfService < 3) { evtPool = evtPool.concat(rookieEvents); }
+        if (player.age >= 50) { evtPool = evtPool.concat(seniorEvents); }
+        if (player.badHabit && Math.random() < 0.4) { evtPool = evtPool.concat(badHabitEvents); }
 
         if (jobSpecificEvents[player.role] && Math.random() < 0.6) {
             let specificPool = jobSpecificEvents[player.role];
@@ -778,27 +773,31 @@
     }
 
     function triggerEvent(evt) {
-        document.getElementById("event-title").innerText = `📅 【${player.age} 歲】 ${evt.title}`;
-        document.getElementById("event-desc").innerHTML = evt.desc;
+        document.getElementById("event-title").innerText = evt.title;
+        document.getElementById("event-desc").innerText = evt.desc;
 
-        let container = document.getElementById("choices-container");
-        container.innerHTML = "";
-        evt.options.forEach((opt) => {
+        let choicesContainer = document.getElementById("choices-container");
+        choicesContainer.innerHTML = "";
+
+        evt.options.forEach((opt, index) => {
             let btn = document.createElement("button");
             btn.className = "btn-choice";
             btn.innerText = opt.text;
-            btn.onclick = () => processChoice(opt);
-            container.appendChild(btn);
+            btn.onclick = () => handleChoice(opt);
+            choicesContainer.appendChild(btn);
         });
-        
-        updateUI();
     }
 
-    function processChoice(opt) {
+    function handleChoice(opt) {
+        document.getElementById("choices-container").innerHTML = "";
+
+        let logHTML = `<div class="log-box">💡 <b>事件結果：</b>${opt.result}</div>`;
+        document.getElementById("log-container").innerHTML = logHTML;
+
         if (opt.triggerFire) {
             player.isFired = true;
             player.firedReason = opt.fireReason;
-            endGame(false);
+            setTimeout(() => { endGame(false); }, 2000);
             return;
         }
 
@@ -808,147 +807,97 @@
             player.badHabit = null;
         }
 
-        let changeLogs = [];
-        let isMajorPunished = false;
-
         if (opt.changes) {
             for (let key in opt.changes) {
                 player.stats[key] += opt.changes[key];
-                let nameMap = { stamina: "體能", route: "路線", management: "向上管理", smart: "處事應變", relationship: "人緣" };
-                let valStr = opt.changes[key] > 0 ? `+${opt.changes[key]}` : `${opt.changes[key]}`;
-                changeLogs.push(`${nameMap[key]} ${valStr}`);
-                
-                if (opt.changes[key] <= -3) {
-                    isMajorPunished = true;
-                }
             }
         }
 
-        if (opt.addPoints && opt.addPoints > 0) {
+        if (opt.addPoints) {
             player.points += opt.addPoints;
-            changeLogs.push(`獲得額外點數 +${opt.addPoints}`);
         }
 
-        let currentMonthly = salaryTable[player.salaryGrade] || 36250;
-        let yearlyIncome = 0;
-        let extraHabitCost = 0;
-
-        if (player.badHabit === "smoke") extraHabitCost += 36000;
-        if (player.badHabit === "betel") extraHabitCost += 60000;
-
-        if (isMajorPunished) {
-            yearlyIncome = currentMonthly * 12;
-            changeLogs.push(`⚠️ 當年遭記大過懲處（考績丙等）：【不予晉薪】，當年年終與考績獎金全額泡湯！`);
-        } else {
-            yearlyIncome = Math.floor(currentMonthly * 16.5);
-            
-            if (player.role === "郵務稽查") {
-                yearlyIncome += 3000;
-                changeLogs.push(`郵務稽查年金加給 +$3,000`);
-            }
-
-            if (opt.grade) {
-                player.gradeA++;
-                changeLogs.push(`獲得考績甲等`);
-            }
-
-            if (player.salaryGrade > 36) {
-                player.salaryGrade--;
-                changeLogs.push(`薪級升至第 ${player.salaryGrade} 級`);
-            } else {
-                changeLogs.push(`已達專二碰頂最高薪級 (第 36 級)`);
-            }
+        if (opt.grade) {
+            player.gradeA++;
         }
 
-        // 扣除基本生活費用 15 萬元與不良嗜好開銷後計入淨資產
-        let netYearlyIncome = yearlyIncome - 150000 - extraHabitCost;
-        player.totalEarnings += netYearlyIncome;
-        
-        changeLogs.push(`今年實領總年薪：$${yearlyIncome.toLocaleString()} | 扣除基本生活費15萬${extraHabitCost > 0 ? '與嗜好開銷' : ''}後淨存：$${netYearlyIncome.toLocaleString()}`);
-
-        player.delivered += Math.floor(player.stats.route * 1200 + 8000);
-
-        let logText = `📢 <b>【選擇結果】</b><br>${opt.result}<br><br><b>📈 結算：</b> ${changeLogs.join(" | ")}`;
-        document.getElementById("choices-container").innerHTML = "";
-        document.getElementById("log-container").innerHTML = `<div class="log-box">${logText}</div>`;
-
-        player.age++;
-        
-        let mainBtn = document.getElementById("btn-main");
-        mainBtn.classList.remove("hidden");
-        updateUI();
+        processYearEndFinance();
     }
 
-    function applyJob(targetJob) {
-        let score = 0;
-        if (targetJob === "白天接送收攬") score = player.stats.route * 2 + player.stats.stamina * 1.5;
-        else if (targetJob === "半夜接送收攬") score = player.stats.stamina * 2 + player.stats.smart * 1.5;
-        else if (targetJob === "郵務稽查") score = player.stats.management * 2 + player.stats.relationship * 1.5;
+    function processYearEndFinance() {
+        let monthlySalary = salaryTable[player.salaryGrade] || 36250;
+        let annualBase = monthlySalary * 12;
+        let performanceBonus = player.gradeA > 0 ? monthlySalary * 1.5 : monthlySalary * 0.5;
+        let totalYearIncome = annualBase + performanceBonus;
 
-        let rivalScore = Math.floor(Math.random() * 30) + 35;
+        let livingExpense = 180000;
+        if (player.badHabit === "smoke") livingExpense += 36000;
+        if (player.badHabit === "betel") livingExpense += 60000;
 
-        if (score >= rivalScore) {
-            player.role = targetJob;
-            alert(`🎉 競爭成功！你成功獲得新職位：【${targetJob}】！`);
-        } else {
-            alert(`❌ 競爭失敗！資力與關鍵屬性還不夠高，請繼續努力！`);
+        let netYearSavings = totalYearIncome - livingExpense;
+        player.totalEarnings += netYearSavings;
+
+        // 升薪級機制
+        if (player.salaryGrade > 36 && Math.random() < 0.7) {
+            player.salaryGrade--;
         }
+
+        player.age++;
+        setTimeout(() => { updateUI(); }, 2500);
+    }
+
+    function applyJob(targetRole) {
+        player.role = targetRole;
+        alert(`🎉 恭喜您成功轉任：${targetRole}！`);
+        checkCareerOpportunities();
         updateUI();
     }
 
     function takeExam() {
-        player.examPassed = true;
-        if (Math.random() < 0.7) {
-            alert("🎉 恭喜通過升遷大考轉任內勤！邁向冷氣房人生～");
-            endGame(true);
+        let score = Math.floor(Math.random() * 30) + 70 + (player.stats.smart * 0.5);
+        if (score >= 85) {
+            player.examPassed = true;
+            player.role = "內勤行政及櫃台人員";
+            alert(`📝 內部升遷考試放榜！您的筆試與口試總分 ${score.toFixed(1)} 分，高分上榜！順利轉調【內勤行政及櫃台人員】！`);
         } else {
-            player.role = "外勤郵務員（內勤適應不良重回外勤）";
-            alert("⚠️ 轉任內勤後適應不良，申請退貨重回外勤！");
-            updateUI();
+            alert(`📝 內部升遷考試放榜！您的總分 ${score.toFixed(1)} 分，差了一點點飲恨落榜，再接再厲！`);
         }
+        checkCareerOpportunities();
+        updateUI();
     }
 
-    function endGame(isOfficeWin = false) {
+    function endGame(isRetired) {
         document.getElementById("game-page").classList.add("hidden");
         document.getElementById("result-page").classList.remove("hidden");
 
-        let codeNameMap = { "A": "【天賦 A：路線敏銳】", "B": "【天賦 B：靈敏應變】", "C": "【天賦 C：鋼鐵體魄】" };
-        let finalTitle = "【堅守崗位郵務員】";
-        
+        let header = document.getElementById("result-header");
+        let content = document.getElementById("summary-content");
+
         if (player.isFired) {
-            document.getElementById("result-header").innerText = "⚠️ 職場解職/失能通知書";
-            finalTitle = "🚨【因故遭免職或失能退場】";
-        } else if (isOfficeWin) {
-            document.getElementById("result-header").innerText = "🎉 順利轉內勤．遊戲圓滿通關！";
-            finalTitle = "【冷氣房辦公室大師．成功上岸】";
-        } else if (player.role === "郵務稽查") {
-            finalTitle = "【掌權巡查者．郵務稽查大師】";
-        } else if (player.role === "半夜接送收攬") {
-            finalTitle = "【夜行傳說．大宗月台殺手】";
-        } else if (player.role === "白天接送收攬") {
-            finalTitle = "【城市穿梭機．高效收攬王】";
+            header.innerText = "🚨 郵差生涯中斷（遭到解職）";
+            content.innerHTML = `
+                <b>${player.name}</b> 先生/女士，您的郵差生涯在 ${player.age} 歲時畫下句點。<br>
+                <b>離職原因：</b> ${player.firedReason}<br><br>
+                💼 生涯總年資：${player.age - player.startAge} 年<br>
+                💰 生涯累積淨資產：$${player.totalEarnings.toLocaleString()} 元<br>
+                🏆 獲頒考績甲等次數：${player.gradeA} 次<br>
+            `;
+        } else {
+            header.innerText = "🏆 郵差生涯圓滿榮退報告";
+            content.innerHTML = `
+                恭喜 <b>${player.name}</b> 平安度過漫長的郵政歲月，於 ${player.age} 歲順利光榮退休！<br><br>
+                📦 最終職務：${player.role}<br>
+                📈 最終薪級：${player.salaryGrade} 級（月薪 $${(salaryTable[player.salaryGrade] || 36250).toLocaleString()}）<br>
+                💰 生涯累積淨資產：$${player.totalEarnings.toLocaleString()} 元<br>
+                ⭐ 獲頒考績甲等次數：${player.gradeA} 次<br>
+                📊 最終屬性能力：<br>
+                - ⚡ 體能強度: ${player.stats.stamina}/20<br>
+                - 🗺️ 路線熟練度: ${player.stats.route}/20<br>
+                - 👔 向上管理: ${player.stats.management}/20<br>
+                - 📚 處事與應變: ${player.stats.smart}/20<br>
+                - 🤝 人緣社交: ${player.stats.relationship}/20<br>
+            `;
         }
-
-        let finalSalary = salaryTable[player.salaryGrade] || 36250;
-
-        document.getElementById("summary-content").innerHTML = `
-            <b>姓名：</b> ${player.name}<br>
-            <b>背景經歷：</b> 曾任「${player.oldJob}」，心路歷程：${player.whyPost}<br>
-            <b>入職起始年齡：</b> ${player.startAge} 歲 (${player.section})<br>
-            <b>揭曉天賦：</b> <span style="color:#0288d1; font-weight:bold;">${codeNameMap[player.code]}</span><br>
-            <b>生涯稱號：</b> <span style="font-size:18px; color:#d32f2f; font-weight:bold;">${finalTitle}</span><br>
-            ${player.isFired ? `<br><b>離職原因：</b> <span style="color:red;">${player.firedReason}</span><br>` : ''}
-            <hr>
-            💰 <b>生涯財務總結 (已扣除每年15萬元基本生活費)：</b><br>
-            - 生涯累積淨資產：<b style="font-size:18px; color:#2e7d32;">$${player.totalEarnings.toLocaleString()} 元</b><br>
-            - 退休前最終薪級：<b>第 ${player.salaryGrade} 級</b> ($${finalSalary.toLocaleString()}/月)<br>
-            <hr>
-            📊 <b>最終能力值：</b><br>
-            體能: ${player.stats.stamina} | 熟練: ${player.stats.route} | 向上管理: ${player.stats.management} | 應變: ${player.stats.smart} | 人緣: ${player.stats.relationship}<br>
-            <hr>
-            📮 <b>生涯處理郵件總數：</b> ${player.delivered.toLocaleString()} 件<br>
-            🏆 <b>獲得考績甲等：</b> ${player.gradeA} 次<br>
-        `;
     }
 </script>
 </body>
