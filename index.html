@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>郵差人生模擬器 V10.0 深度傳奇版</title>
+    <title>郵差人生模擬器 V10.1 自由轉職傳奇版</title>
     <style>
         :root {
             --green-main: #008751;
@@ -70,7 +70,7 @@
             width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 6px;
             box-sizing: border-box; font-size: 14px; font-family: inherit;
         }
-        textarea { resize: vertical; height: 60px; }
+        textarea { resize: vertical; height: 80px; }
         .hidden { display: none !important; }
         .log-box {
             background: #fffde7; border-left: 4px solid #fbc02d; padding: 10px;
@@ -94,7 +94,7 @@
 <body>
 
 <div class="container">
-    <h1>📮 郵差人生模擬器 V10.0</h1>
+    <h1>📮 郵差人生模擬器 V10.1</h1>
 
     <!-- 階段 1：基礎設定 -->
     <div id="setup-page-1">
@@ -104,11 +104,8 @@
             <input type="text" id="player-name" value="郵小弟">
         </div>
         <div class="setup-group">
-            <label for="player-age">入職起始年齡：</label>
-            <select id="player-age" onchange="toggleStoryStep()">
-                <option value="18">18 歲（應屆畢業生直接投身郵政）</option>
-                <option value="22" selected>22 歲或以上（社會歷練後轉職考進來）</option>
-            </select>
+            <label for="player-age">入職起始年齡（可自由輸入）：</label>
+            <input type="number" id="player-age" value="25" min="18" max="60">
         </div>
         <div class="setup-group">
             <label for="player-section">剛進局初次職務選擇：</label>
@@ -125,22 +122,22 @@
                 <option value="C">【天賦 C】鋼鐵體魄（體能強度與路線熟練加成）</option>
             </select>
         </div>
-        <button class="btn-action" onclick="goToStoryStep()">下一步：填寫轉職心路歷程</button>
+        <button class="btn-action" onclick="goToStoryStep()">下一步：設定前職與轉職心路歷程</button>
     </div>
 
-    <!-- 階段 1.5：轉職與心路歷程設定（僅 22 歲以上或可自訂背景者顯示） -->
+    <!-- 階段 1.5：轉職與心路歷程設定 -->
     <div id="setup-page-2" class="hidden">
-        <h3>Step 2: 轉職背景與報考心聲</h3>
-        <div class="story-preview">
-            你決定在社會闖蕩一番後，重新抉擇職涯。請填寫你的前一份工作與報考郵局的契機，這將成為你郵局人生的序幕！
+        <h3>Step 2: 轉職背景與動態心路歷程</h3>
+        <div class="story-preview" id="story-preview-box">
+            <!-- 這裡會根據玩家填寫的年齡動態計算工作年資並產生介紹 -->
         </div>
         <div class="setup-group">
             <label for="player-old-job">你進郵局前的上一份職業：</label>
-            <input type="text" id="player-old-job" value="民營物流司機 / 慣老闆血汗工廠勞工">
+            <input type="text" id="player-old-job" value="民營物流司機" oninput="updateStoryText()">
         </div>
         <div class="setup-group">
-            <label for="player-why-post">為什麼想考郵局？（心路歷程）：</label>
-            <textarea id="player-why-post">外面私人企業薪水凍漲又沒保障，想求個穩定生活，順便鍛鍊自己，於是狠下心拼一把考進中華郵政！</textarea>
+            <label for="player-why-post">轉職心路歷程與報考郵局契機：</label>
+            <textarea id="player-why-post">在外面私人企業每天加班卻面臨薪資凍漲與慣老闆壓榨，為了尋求穩定的生活與合理的保障，決定破釜沉舟報考中華郵政！</textarea>
         </div>
         <button class="btn-action" onclick="startGame()">確認背景，正式進局報到！</button>
         <button class="btn-action" style="background:#757575;" onclick="backToSetup1()">回上一步</button>
@@ -149,7 +146,7 @@
     <!-- 階段 2：主遊戲畫面 -->
     <div id="game-page" class="hidden">
         <div class="status-bar">
-            <div class="status-item">年齡 / 職務<span id="stat-age">22歲</span></div>
+            <div class="status-item">年齡 / 職務<span id="stat-age">25歲</span></div>
             <div class="status-item">目前薪級 / 月薪<span id="stat-salary">55級 ($36,250)</span></div>
             <div class="status-item">生涯累積總薪資<span id="stat-total-salary" style="color:#d32f2f;">$0</span></div>
             <div class="status-item">考績甲等累計<span id="stat-eval">0 次</span></div>
@@ -222,7 +219,7 @@
     };
 
     let player = {
-        name: "", code: "A", section: "混投段", age: 22, startAge: 22, role: "外勤郵務員（混投段）",
+        name: "", code: "A", section: "混投段", age: 25, startAge: 25, role: "外勤郵務員（混投段）",
         oldJob: "", whyPost: "",
         salaryGrade: 55, 
         totalEarnings: 0,
@@ -481,31 +478,34 @@
         ]
     };
 
-    function toggleStoryStep() {
-        let ageSelect = document.getElementById("player-age").value;
-        if (ageSelect === "18") {
-            // 如果選18歲，可以直接跳過背景填寫，或自動填入預設
-            document.getElementById("player-old-job").value = "應屆畢業生";
-            document.getElementById("player-why-post").value = "剛畢業就順利考取郵局，展開米飯碗生涯！";
-        } else {
-            document.getElementById("player-old-job").value = "民營物流司機 / 慣老闆血汗工廠勞工";
-            document.getElementById("player-why-post").value = "外面私人企業薪水凍漲又沒保障，想求個穩定生活，於是狠下心拼一把考進中華郵政！";
-        }
+    function updateStoryText() {
+        let age = parseInt(document.getElementById("player-age").value) || 25;
+        let oldJob = document.getElementById("player-old-job").value || "各行各業勞工";
+        let workYears = Math.max(1, age - 18 - 3); // 簡單估算社會歷練年資
+
+        let previewBox = document.getElementById("story-preview-box");
+        previewBox.innerHTML = `
+            <b>【動態轉職背景預覽】</b><br>
+            你今年 <b>${age}</b> 歲。在踏入郵局前，你曾在 <b>${oldJob}</b> 打滾了約 <b>${workYears}</b> 年。這段社會歷練讓你嘗盡了冷暖，也促使你萌生轉職念頭，最終選擇報考中華郵政尋求穩定的人生！
+        `;
     }
 
     function goToStoryStep() {
+        let ageInput = parseInt(document.getElementById("player-age").value);
+        if (isNaN(ageInput) || ageInput < 18) {
+            alert("請輸入有效的起始年齡（至少 18 歲以上）！");
+            return;
+        }
+
         player.name = document.getElementById("player-name").value || "郵小弟";
-        player.startAge = parseInt(document.getElementById("player-age").value) || 22;
+        player.startAge = ageInput;
         player.code = document.getElementById("player-code").value;
         player.section = document.getElementById("player-section").value;
 
-        // 如果是18歲，直接略過第二步進遊戲；如果是22歲以上，進入第二步填寫轉職心路歷程
-        if (player.startAge === 18) {
-            startGame();
-        } else {
-            document.getElementById("setup-page-1").classList.add("hidden");
-            document.getElementById("setup-page-2").classList.remove("hidden");
-        }
+        updateStoryText();
+
+        document.getElementById("setup-page-1").classList.add("hidden");
+        document.getElementById("setup-page-2").classList.remove("hidden");
     }
 
     function backToSetup1() {
@@ -514,14 +514,8 @@
     }
 
     function startGame() {
-        if (player.startAge !== 18) {
-            player.oldJob = document.getElementById("player-old-job").value || "社會各界勞動者";
-            player.whyPost = document.getElementById("player-why-post").value || "追求穩定生活而報考";
-        } else {
-            player.oldJob = "應屆畢業生";
-            player.whyPost = "剛畢業即就業";
-        }
-
+        player.oldJob = document.getElementById("player-old-job").value || "社會各界勞動者";
+        player.whyPost = document.getElementById("player-why-post").value || "追求穩定生活而報考";
         player.age = player.startAge;
 
         if (player.section === "快捷包裹段") {
@@ -590,7 +584,6 @@
 
         let availableNotice = [];
 
-        // 一旦當上郵務稽查，直到退休都不用競爭其他位置，除非是白天收攬
         if (player.role === "郵務稽查") {
             if (Math.random() < 0.20) {
                 btnDay.classList.remove("hidden");
@@ -797,7 +790,7 @@
         document.getElementById("summary-content").innerHTML = `
             <b>姓名：</b> ${player.name}<br>
             <b>背景經歷：</b> 曾任「${player.oldJob}」，因「${player.whyPost}」而決定踏入郵局。<br>
-            <b>入職年齡：</b> ${player.startAge} 歲入職 (${player.section})<br>
+            <b>入職起始年齡：</b> ${player.startAge} 歲 (${player.section})<br>
             <b>揭曉天賦：</b> <span style="color:#0288d1; font-weight:bold;">${codeNameMap[player.code]}</span><br>
             <b>生涯稱號：</b> <span style="font-size:18px; color:#d32f2f; font-weight:bold;">${finalTitle}</span><br>
             <hr>
