@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>郵差人生模擬器 V10.3 心路歷程多樣化版</title>
+    <title>郵差人生模擬器 V10.4 真實對話版</title>
     <style>
         :root {
             --green-main: #008751;
@@ -88,14 +88,17 @@
             background: #e8f5e9; border-left: 4px solid var(--green-main); padding: 12px;
             margin-bottom: 15px; font-size: 13px; border-radius: 4px; line-height: 1.6; color: #2e7d32;
         }
+        .chat-simulation {
+            background: #e1f5fe; border-radius: 8px; padding: 10px; margin-bottom: 10px; font-size: 13px;
+        }
+        .chat-msg { background: #fff; padding: 8px 12px; border-radius: 6px; margin-bottom: 6px; line-height: 1.4; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h1>📮 郵差人生模擬器 V10.3</h1>
+    <h1>📮 郵差人生模擬器 V10.4</h1>
 
-    <!-- 階段 1：基礎設定 -->
     <div id="setup-page-1">
         <h3>Step 1: 基本角色資料</h3>
         <div class="setup-group">
@@ -128,7 +131,6 @@
         <button class="btn-action" onclick="startGame()">確認設定，正式進局報到！</button>
     </div>
 
-    <!-- 階段 2：主遊戲畫面 -->
     <div id="game-page" class="hidden">
         <div class="status-bar">
             <div class="status-item">年齡 / 職務<span id="stat-age">25歲</span></div>
@@ -137,7 +139,6 @@
             <div class="status-item">考績甲等累計<span id="stat-eval">0 次</span></div>
         </div>
 
-        <!-- 屬性加點面板 -->
         <div class="stats-panel">
             <div class="stats-header">
                 <span>📊 屬性能力值 </span>
@@ -165,7 +166,6 @@
             </div>
         </div>
 
-        <!-- 玩家背景心路歷程展示區 -->
         <div id="prologue-container"></div>
 
         <div class="event-card">
@@ -178,7 +178,6 @@
 
         <button id="btn-main" class="btn-action" onclick="startYear()">進行今年業務</button>
 
-        <!-- 特殊職務競爭與升遷區域 -->
         <div class="job-section hidden" id="job-section">
             <div class="job-title">🏆 今年出現的特殊職務/升遷機會！</div>
             <div id="opportunity-notice" class="opportunity-notice"></div>
@@ -189,7 +188,6 @@
         </div>
     </div>
 
-    <!-- 階段 3：退休/通關結算 -->
     <div id="result-page" class="hidden">
         <h2 id="result-header">🏆 郵差生涯榮退報告</h2>
         <div id="summary-content" style="line-height: 1.8; background:#fff8e1; padding:15px; border-radius:10px;"></div>
@@ -293,54 +291,6 @@
                     changes: { smart: 2, stamina: 1 }, addPoints: 1, grade: false
                 }
             ]
-        },
-        {
-            title: "🍱 團購美食與職場排擠大戰",
-            desc: "局裡最近流行揪團訂下午茶，但主揪的資深前輩看你很不順眼，故意裝作沒問你要不要一起訂。",
-            options: [
-                {
-                    text: "1. 當作無所謂，自己跑去隔壁買超商珍奶",
-                    result: "樂得清閒，省得跟局裡的派系鬥爭勾心鬥角。",
-                    changes: { smart: 1 }, addPoints: 0, grade: false
-                },
-                {
-                    text: "2. 當眾大聲酸前輩「揪團排擠人喔？」",
-                    result: "場面瞬間降到冰點！雖然爽快了一秒，但從此在局裡被徹底邊緣化。",
-                    changes: { relationship: -3, management: -1 }, addPoints: 0, grade: false
-                }
-            ]
-        },
-        {
-            title: "☀️ 酷暑高溫假與熱中暑危機",
-            desc: "夏日氣溫飆破 38 度，外送送信不到半小時就汗如雨下，頭暈目眩快要暈倒了！",
-            options: [
-                {
-                    text: "a) 硬撐下去，拼了老命把信送完再說",
-                    result: "結果真的中暑倒在路邊，被熱心民眾叫救護車送醫，白白受罪。",
-                    changes: { stamina: -3 }, addPoints: 0, grade: false
-                },
-                {
-                    text: "b) 尋找便利商店躲進去吹冷氣喝運動飲料休息",
-                    result: "雖然拖慢了進度，但保住了寶貴的性命與健康，安全第一！",
-                    changes: { smart: 1, stamina: 1 }, addPoints: 1, grade: false
-                }
-            ]
-        },
-        {
-            title: "🧓 巷口阿嬤的靈魂拷問",
-            desc: "送信經過巷口時，熟識的鄰居阿嬤突然攔住你，開始瘋狂推銷她孫子的直銷保養品與神祕生機飲食。",
-            options: [
-                {
-                    text: "1. 花錢消災，掏腰包買一組當作做國民外交",
-                    result: "荷包大失血，還吃了一肚子神祕健康食品，但阿嬤逢人就誇你是好青年。",
-                    changes: { relationship: 2, smart: -1 }, addPoints: 0, grade: false
-                },
-                {
-                    text: "2. 假裝無線電響起，大喊「局長找我急件！」秒溜走",
-                    result: "演技精湛成功脫身，完美避開一場錢財與精神的折磨。",
-                    changes: { smart: 2 }, addPoints: 1, grade: false
-                }
-            ]
         }
     ];
 
@@ -361,49 +311,33 @@
                         changes: { stamina: -3, relationship: 2 }, addPoints: 0, grade: false
                     }
                 ]
-            },
-            {
-                title: "📬 迷路的信件與神祕檢舉函",
-                desc: "分信時發現有一封署名要給局長、內容極其辛辣的「神祕內部檢舉函」，不小心被你瞄到了內容...",
-                options: [
-                    {
-                        text: "1. 默默裝作沒看到，按規定投入局長室信箱",
-                        result: "明哲保身，局裡後來掀起什麼風浪也與你無關，平安過完一天。",
-                        changes: { smart: 1 }, addPoints: 0, grade: false
-                    },
-                    {
-                        text: "2. 偷偷拍照傳到私人小群組八卦",
-                        result: "不小心流傳出去引發全局大地震！被查出來是你外流的，長官對你印象慘跌谷底。",
-                        changes: { management: -4, relationship: -2 }, addPoints: 0, grade: false
-                    }
-                ]
             }
         ],
         "外勤郵務員（快捷包裹段）": [
             {
-                title: "🚗 快捷郵車引擎燈亮起危機",
-                desc: "送包裹的車子引擎燈突然亮起警示，你跟稽查反應，但稽查堅持「沒有顧路（半路拋錨）就不用修」，你該怎麼辦？",
+                title: "🚗 工作群組的引擎燈危機",
+                desc: "上班群組突然跳出主管與同事對話：<div class='chat-simulation'><div class='chat-msg'><b>主管：</b> 幫我看一下引擎燈是不是還亮著紅燈，文瑋說已經亮兩三天了，幫我注意一下</div><div class='chat-msg'><b>稽查（梁俊彥）：</b> 注意一下，盡量早一點檢查</div><div class='chat-msg'><b>同事（徐昌誠）：</b> 上個月修車廠檢查過說沒問題，把故障燈消除了！</div></div>你身為這台車的駕駛，該怎麼在群組回覆？",
                 options: [
                     {
-                        text: "1. 默默承受一切，開著亮燈的車繼續硬撐送信",
-                        result: "車子在半路徹底縮缸冒煙拋錨！不僅延誤時效還挨了長官一頓高級檢討會。",
-                        changes: { stamina: -2, management: -2 }, addPoints: 0, grade: false
+                        text: "a) 「我會繼續開邊觀察，只是先報告有此事情」",
+                        result: "你選擇理性回報並持續觀察，主管跟稽查都覺得你態度良好、公事公辦！",
+                        changes: { smart: 1, management: 1 }, addPoints: 1, grade: false
                     },
                     {
-                        text: "2. 大聲跟稽查吆喝：報修啦！",
-                        result: "你當場火大爆發飆罵，稽查被你的氣勢嚇到馬上妥協叫修！雖然在局裡黑了一點，但車修好了。",
-                        changes: { smart: 1, relationship: -2 }, addPoints: 1, grade: false
+                        text: "b) 默默潛水不回話，反正燈亮就繼續開，賭它不會顧路",
+                        result: "車子幾天後在半路拋錨冒煙！長官質疑為何群組交代不理會，記了一支小申誡。",
+                        changes: { management: -2, stamina: -1 }, addPoints: 0, grade: false
                     },
                     {
-                        text: "3. 跟稽查說不修我就不做這個缺了",
-                        result: "直接拿職缺威脅，稽查摸摸鼻子趕快派車處理，成功捍衛自己的勞動權益！",
-                        changes: { management: 2, smart: 1 }, addPoints: 1, grade: true
+                        text: "c) 直接截圖回嗆：「都說修車廠檢查過了是要看幾點？」",
+                        result: "群組瞬間一片安靜！雖然感覺很爽，但主管覺得你頂撞長官，黑掉了一大半。",
+                        changes: { relationship: -3, management: -2 }, addPoints: 0, grade: false
                     }
                 ]
             },
             {
                 title: "📦 中秋節包裹量暴增的煉獄",
-                desc: "中秋節檔期包裹量暴增三倍，偏偏資深同事提早排休放假，值班稽查又有嚴重口臭，你該如何應對？",
+                desc: "中秋節檔期包裹量暴增三倍，偏偏資深同事提早排休放假，你該如何應對？",
                 options: [
                     {
                         text: "準時下班！明天的事交給明天的我",
@@ -412,7 +346,7 @@
                     },
                     {
                         text: "任勞任怨，加班送到完！",
-                        result: "頂著口臭稽查的碎念與滿坑滿谷的包裹一路加班到深夜，雖然累垮但順利消化完畢！",
+                        result: "頂著滿坑滿谷的包裹一路加班到深夜，雖然累垮但順利消化完畢！",
                         changes: { stamina: -2, management: 2 }, addPoints: 1, grade: true
                     }
                 ]
@@ -448,7 +382,7 @@
                     },
                     {
                         text: "b) 通報緊急支援與後續調度",
-                        result: "冷靜聯繫值班稽查調派備用車！處事穩重，保住了全車郵件安全！",
+                        result: "冷靜聯繫值班人員調派備用車！處事穩重，保住了全車郵件安全！",
                         changes: { management: 1, smart: 1 }, addPoints: 0, grade: false
                     }
                 ]
@@ -634,7 +568,7 @@
 
     function triggerEvent(evt) {
         document.getElementById("event-title").innerText = `📅 【${player.age} 歲】 ${evt.title}`;
-        document.getElementById("event-desc").innerText = evt.desc;
+        document.getElementById("event-desc").innerHTML = evt.desc;
 
         let container = document.getElementById("choices-container");
         container.innerHTML = "";
