@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>郵差人生模擬器 V10.4 真實對話版</title>
+    <title>郵差人生模擬器 V11.0 究極優化版</title>
     <style>
         :root {
             --green-main: #008751;
@@ -97,7 +97,7 @@
 <body>
 
 <div class="container">
-    <h1>📮 郵差人生模擬器 V10.4</h1>
+    <h1>📮 郵差人生模擬器 V11.0</h1>
 
     <div id="setup-page-1">
         <h3>Step 1: 基本角色資料</h3>
@@ -135,13 +135,13 @@
         <div class="status-bar">
             <div class="status-item">年齡 / 職務<span id="stat-age">25歲</span></div>
             <div class="status-item">目前薪級 / 月薪<span id="stat-salary">55級 ($36,250)</span></div>
-            <div class="status-item">生涯累積總薪資<span id="stat-total-salary" style="color:#d32f2f;">$0</span></div>
+            <div class="status-item">生涯淨資產 (扣除生活費)<span id="stat-total-salary" style="color:#d32f2f;">$0</span></div>
             <div class="status-item">考績甲等累計<span id="stat-eval">0 次</span></div>
         </div>
 
         <div class="stats-panel">
             <div class="stats-header">
-                <span>📊 屬性能力值 </span>
+                <span>📊 屬性能力值 (範圍 1~20)</span>
                 <span style="color:#d32f2f;">剩餘點數：<span id="stat-points">0</span></span>
             </div>
             <div class="stat-row">
@@ -214,9 +214,11 @@
         delivered: 0, gradeA: 0,
         examPassed: false,
         isFired: false,
-        firedReason: ""
+        firedReason: "",
+        badHabit: null // "smoke" 或 "betel" 或 null
     };
 
+    const MIN_STAT = 1;
     const MAX_STAT = 20;
 
     const whyPostTemplates = [
@@ -246,7 +248,7 @@
         },
         {
             title: "📲 LINE 社交地獄爆發",
-            desc: "午休手機滑太爽，不小心把私下的訊息誤傳到郵局大群組（內有股長、稽查與全體同事）！",
+            desc: "午休手機滑太爽，不小心把私下的訊息誤傳到郵局大群組（內有局長、專員與全體同仁）！",
             options: [
                 {
                     text: "按一下『刪除』（只有自己看不到）",
@@ -294,6 +296,95 @@
         }
     ];
 
+    const rookieEvents = [
+        {
+            title: "🛵 菜鳥犁田記",
+            desc: "剛分發到混投段不久，對路況不熟又遇到煞車失靈，連人帶車摔進路旁水溝！",
+            options: [
+                {
+                    text: "摸摸鼻子自認倒楣，自己爬起來拖車",
+                    result: "車子大破相，人也擦傷流血，信心大受打擊。",
+                    changes: { stamina: -2, route: 1 }, addPoints: 0, grade: false
+                },
+                {
+                    text: "老實打電話跟局內求救支援",
+                    result: "被前輩唸了一頓，但也記取了出車前的車況檢查教訓。",
+                    changes: { management: -1, smart: 1 }, addPoints: 0, grade: false
+                }
+            ]
+        },
+        {
+            title: "📦 菜鳥大出包：信件搞失蹤",
+            desc: "第一次獨立派信，收工回局裡才發現整疊掛號信竟然少了一疊，不知道掉在哪條路上！",
+            options: [
+                {
+                    text: "沿路回頭瘋狂找尋並挨家挨戶詢問",
+                    result: "好不容易在某個路口民宅信箱找到，搞到天黑才收工，體力透支。",
+                    changes: { stamina: -3, smart: 1 }, addPoints: 0, grade: false
+                },
+                {
+                    text: "急哭求助同仁幫忙尋找",
+                    result: "在同仁熱心幫忙下找回，但被主管列為重點關切對象。",
+                    changes: { relationship: 1, management: -2 }, addPoints: 0, grade: false
+                }
+            ]
+        }
+    ];
+
+    const seniorEvents = [
+        {
+            title: "🦴 老鳥的慢性職業勞損",
+            desc: "年過半百，長年搬重物與騎車讓五十肩與椎間盤突出雙重發作，早上起床腰都直不起來！",
+            options: [
+                {
+                    text: "吞止痛藥硬撐，繼續拼送信",
+                    result: "身體加速老化，體能大打折扣。",
+                    changes: { stamina: -3 }, addPoints: 0, grade: false
+                },
+                {
+                    text: "請假去中醫針灸推拿休養",
+                    result: "花費了一筆醫療費，但身體稍微舒緩。",
+                    changes: { stamina: -1, smart: 1 }, addPoints: 0, grade: false
+                }
+            ]
+        }
+    ];
+
+    const badHabitEvents = [
+        {
+            title: "🚬 不良嗜好危機：菸癮發作",
+            desc: "工作壓力大，你在分信空檔忍不住狂抽菸，被同事和民眾側目。",
+            options: [
+                {
+                    text: "下定決心參加局內戒菸門診！嘗試戒除不良嗜好",
+                    result: "靠著強大意志力成功戒菸！擺脫了體力負擔與額外開銷！",
+                    action: "cureHabit"
+                },
+                {
+                    text: "管他的，壓力大就是要抽！繼續維持菸癮",
+                    result: "身體持續慢性耗損，荷包繼續淌血...",
+                    changes: { stamina: -1 }
+                }
+            ]
+        },
+        {
+            title: "🌰 不良嗜好危機：檳榔嘴發作",
+            desc: "長時間騎車精神不濟，你靠著嚼檳榔提神，嘴紅紅的被稽查念了一頓。",
+            options: [
+                {
+                    text: "咬牙忍耐戒除檳榔，改吃口香糖！",
+                    result: "成功戒除檳榔！口腔與身體狀況逐漸恢復健康！",
+                    action: "cureHabit"
+                },
+                {
+                    text: "提神要緊，嚼就對了！",
+                    result: "繼續嚼檳榔，體力與健康每況愈下。",
+                    changes: { stamina: -1 }
+                }
+            ]
+        }
+    ];
+
     const jobSpecificEvents = {
         "外勤郵務員（混投段）": [
             {
@@ -309,6 +400,69 @@
                         text: "2. 說有！結果對方疑似吸毒理智不清，當場把你暴打一波",
                         result: "掛彩送醫急診！衰到極點，好在局裡幫忙申請了公傷與慰問金。",
                         changes: { stamina: -3, relationship: 2 }, addPoints: 0, grade: false
+                    }
+                ]
+            },
+            {
+                title: "💥 惡劣同事與斷龍頭危機",
+                desc: "機車的電動車斷龍頭，每個禮拜都最少騎壞一台檔車，同事自以為開玩笑從出班前到一直嘲笑我到下午區信不中斷",
+                options: [
+                    {
+                        text: "1. 直接打給科長說被霸凌",
+                        result: "科長介入處理，雖然制止了同事的白目行為，但也給主管留下了『抗壓性較弱、愛告狀』的印象。",
+                        changes: { management: -2, relationship: -1 }, addPoints: 0, grade: false
+                    },
+                    {
+                        text: "2. 按規定逐層回報給稽查跟專員",
+                        result: "依照行政程序層層通報，獲得了專員與稽查的關切與公事公辦處理！",
+                        changes: { smart: 1, management: 1 }, addPoints: 1, grade: false
+                    },
+                    {
+                        text: "3. 直接動手",
+                        result: "💥 當場在局裡大打出手！觸犯公務員懲戒法與暴力行為，遭到【強制免職（開除）】！",
+                        triggerFire: true, fireReason: "因在局內動手打人違反職場紀律，遭到免職開除！"
+                    }
+                ]
+            },
+            {
+                title: "🤝 被凹送與不平等對待",
+                desc: "每天都要被同事凹送，不管別人有沒有順路",
+                options: [
+                    {
+                        text: "1. 問他收投津貼要不要分我",
+                        result: "一句話堵得對方啞口無言，從此不敢再隨便凹你幫忙送信！",
+                        changes: { smart: 2, relationship: -1 }, addPoints: 1, grade: false
+                    },
+                    {
+                        text: "2. 當空氣飄走",
+                        result: "裝作沒聽到直接飄走，雖然對方翻白眼，但也省去許多麻煩。",
+                        changes: { smart: 1 }, addPoints: 0, grade: false
+                    },
+                    {
+                        text: "3. 默默忍受",
+                        result: "每天加班幫別人擦屁股，累得跟狗一樣卻沒多拿半毛錢。",
+                        changes: { stamina: -2, management: -1 }, addPoints: 0, grade: false
+                    }
+                ]
+            },
+            {
+                title: "🧦 辦公室惡臭氣味攻擊",
+                desc: "老師傅位置在冷氣口，回來還脫鞋子跟襪子",
+                options: [
+                    {
+                        text: "1. 砸冷氣",
+                        result: "💥 情緒失控砸毀公物！當場遭到局長記大過並移送法辦，黯然離職！",
+                        triggerFire: true, fireReason: "情緒失控砸毀公務冷氣，遭免職處分！"
+                    },
+                    {
+                        text: "2. 把電風扇對他吹讓其他人去忍受",
+                        result: "巧妙借力使力，把味道吹向其他人那側，引發辦公室內部大亂鬥，但你全身而退！",
+                        changes: { smart: 2, relationship: -1 }, addPoints: 1, grade: false
+                    },
+                    {
+                        text: "3. 貼一張紙寫著「你的臭味其他人不必忍受」",
+                        result: "匿名直白公告引起全辦公室轟動！老師傅氣噗噗但找不到兇手，大家暗自叫好。",
+                        changes: { smart: 1, relationship: 1 }, addPoints: 0, grade: false
                     }
                 ]
             }
@@ -329,8 +483,8 @@
                         changes: { management: -2, stamina: -1 }, addPoints: 0, grade: false
                     },
                     {
-                        text: "c) 直接截圖回嗆：「都說修車廠檢查過了是要看幾點？」",
-                        result: "群組瞬間一片安靜！雖然感覺很爽，但主管覺得你頂撞長官，黑掉了一大半。",
+                        text: "c) 在路上顧路的是我不是修車廠他們當然覺得沒問題",
+                        result: "群組瞬間一片安靜！雖然道盡基層心聲，但主管覺得你頂撞長官，黑掉了一大半。",
                         changes: { relationship: -3, management: -2 }, addPoints: 0, grade: false
                     }
                 ]
@@ -422,6 +576,18 @@
         player.section = document.getElementById("player-section").value;
         player.code = document.getElementById("player-code").value;
 
+        // 不良嗜好隨機配置 (30% 抽菸, 10% 檳榔)
+        let habitRoll = Math.random();
+        if (habitRoll < 0.30) {
+            player.badHabit = "smoke";
+            player.stats.stamina -= 5;
+        } else if (habitRoll < 0.40) {
+            player.badHabit = "betel";
+            player.stats.stamina -= 8;
+        } else {
+            player.badHabit = null;
+        }
+
         let workYears = Math.max(1, player.startAge - 18 - 2);
         let randomTemplate = whyPostTemplates[Math.floor(Math.random() * whyPostTemplates.length)];
         player.whyPost = randomTemplate(player.oldJob, player.startAge, workYears);
@@ -438,13 +604,23 @@
         if (player.code === "B") { player.stats.smart += 1; }
         if (player.code === "C") { player.stats.stamina += 1; }
 
+        // 確保屬性開局不低於最低值
+        for (let key in player.stats) {
+            if (player.stats[key] < MIN_STAT) player.stats[key] = MIN_STAT;
+            if (player.stats[key] > MAX_STAT) player.stats[key] = MAX_STAT;
+        }
+
         document.getElementById("setup-page-1").classList.add("hidden");
         document.getElementById("game-page").classList.remove("hidden");
+
+        let habitDesc = "";
+        if (player.badHabit === "smoke") habitDesc = "<br><span style='color:#d32f2f;'>⚠️ 【帶有不良嗜好：抽菸】體力指數 -5，每年額外花費 3.6 萬元。</span>";
+        if (player.badHabit === "betel") habitDesc = "<br><span style='color:#d32f2f;'>⚠️ 【帶有不良嗜好：吃檳榔】體力指數 -8，每年額外花費 6 萬元。</span>";
 
         document.getElementById("prologue-container").innerHTML = `
             <div class="prologue-box">
                 📜 <b>【入職心路歷程】</b><br>
-                你今年 <b>${player.startAge}</b> 歲。${player.whyPost}
+                你今年 <b>${player.startAge}</b> 歲。${player.whyPost} ${habitDesc}
             </div>
         `;
 
@@ -463,7 +639,7 @@
 
         for (let key in player.stats) {
             if (player.stats[key] > MAX_STAT) player.stats[key] = MAX_STAT;
-            if (player.stats[key] < 1) player.stats[key] = 1;
+            if (player.stats[key] < MIN_STAT) player.stats[key] = MIN_STAT;
             
             document.getElementById(`val-${key}`).innerText = player.stats[key];
             let btn = document.getElementById(`btn-add-${key}`);
@@ -559,7 +735,37 @@
 
         player.points += 1;
 
+        // 檢查是否有屬性觸發最低值解職
+        for (let key in player.stats) {
+            if (player.stats[key] <= MIN_STAT) {
+                player.isFired = true;
+                let reasonMap = {
+                    stamina: "體力耗盡至最低點，身體徹底失能無法負荷工作，強制失能退場！",
+                    route: "路線熟練度降至谷底，天天迷路送錯郵件遭到革職！",
+                    management: "向上管理與職場關係完全崩潰，遭到長官聯手報復革職！",
+                    smart: "應變能力歸零，屢次惹出重大紕漏遭到解職！",
+                    relationship: "人緣惡劣至極，全局同仁連署排擠並投訴至總公司遭到革職！"
+                };
+                player.firedReason = reasonMap[key];
+                endGame(false);
+                return;
+            }
+        }
+
+        // 事件池選擇 (入職前三年菜鳥包、超過50歲老鳥包、不良嗜好事件)
+        let yearsOfService = player.age - player.startAge;
         let evtPool = [...commonEvents];
+
+        if (yearsOfService < 3) {
+            evtPool = evtPool.concat(rookieEvents);
+        }
+        if (player.age >= 50) {
+            evtPool = evtPool.concat(seniorEvents);
+        }
+        if (player.badHabit && Math.random() < 0.4) {
+            evtPool = evtPool.concat(badHabitEvents);
+        }
+
         if (jobSpecificEvents[player.role] && Math.random() < 0.6) {
             let specificPool = jobSpecificEvents[player.role];
             let evt = specificPool[Math.floor(Math.random() * specificPool.length)];
@@ -596,6 +802,12 @@
             return;
         }
 
+        if (opt.action === "cureHabit") {
+            if (player.badHabit === "smoke") player.stats.stamina += 5;
+            if (player.badHabit === "betel") player.stats.stamina += 8;
+            player.badHabit = null;
+        }
+
         let changeLogs = [];
         let isMajorPunished = false;
 
@@ -619,13 +831,22 @@
 
         let currentMonthly = salaryTable[player.salaryGrade] || 36250;
         let yearlyIncome = 0;
+        let extraHabitCost = 0;
+
+        if (player.badHabit === "smoke") extraHabitCost += 36000;
+        if (player.badHabit === "betel") extraHabitCost += 60000;
 
         if (isMajorPunished) {
             yearlyIncome = currentMonthly * 12;
-            changeLogs.push(`⚠️ 當年遭記大過懲處（考績丙等）：【不予晉薪】，當年的年終與考績獎金全額泡湯！`);
+            changeLogs.push(`⚠️ 當年遭記大過懲處（考績丙等）：【不予晉薪】，當年年終與考績獎金全額泡湯！`);
         } else {
             yearlyIncome = Math.floor(currentMonthly * 16.5);
             
+            if (player.role === "郵務稽查") {
+                yearlyIncome += 3000;
+                changeLogs.push(`郵務稽查年金加給 +$3,000`);
+            }
+
             if (opt.grade) {
                 player.gradeA++;
                 changeLogs.push(`獲得考績甲等`);
@@ -639,8 +860,11 @@
             }
         }
 
-        player.totalEarnings += yearlyIncome;
-        changeLogs.push(`今年實領總年薪：$${yearlyIncome.toLocaleString()}`);
+        // 扣除基本生活費用 15 萬元與不良嗜好開銷後計入淨資產
+        let netYearlyIncome = yearlyIncome - 150000 - extraHabitCost;
+        player.totalEarnings += netYearlyIncome;
+        
+        changeLogs.push(`今年實領總年薪：$${yearlyIncome.toLocaleString()} | 扣除基本生活費15萬${extraHabitCost > 0 ? '與嗜好開銷' : ''}後淨存：$${netYearlyIncome.toLocaleString()}`);
 
         player.delivered += Math.floor(player.stats.route * 1200 + 8000);
 
@@ -692,8 +916,8 @@
         let finalTitle = "【堅守崗位郵務員】";
         
         if (player.isFired) {
-            document.getElementById("result-header").innerText = "⚠️ 職務解僱通知書（強制退休）";
-            finalTitle = "🚨【局內極端毒瘤．強制免職退場】";
+            document.getElementById("result-header").innerText = "⚠️ 職場解職/失能通知書";
+            finalTitle = "🚨【因故遭免職或失能退場】";
         } else if (isOfficeWin) {
             document.getElementById("result-header").innerText = "🎉 順利轉內勤．遊戲圓滿通關！";
             finalTitle = "【冷氣房辦公室大師．成功上岸】";
@@ -713,9 +937,10 @@
             <b>入職起始年齡：</b> ${player.startAge} 歲 (${player.section})<br>
             <b>揭曉天賦：</b> <span style="color:#0288d1; font-weight:bold;">${codeNameMap[player.code]}</span><br>
             <b>生涯稱號：</b> <span style="font-size:18px; color:#d32f2f; font-weight:bold;">${finalTitle}</span><br>
+            ${player.isFired ? `<br><b>離職原因：</b> <span style="color:red;">${player.firedReason}</span><br>` : ''}
             <hr>
-            💰 <b>生涯財務總結：</b><br>
-            - 生涯累積總薪資：<b style="font-size:18px; color:#2e7d32;">$${player.totalEarnings.toLocaleString()} 元</b><br>
+            💰 <b>生涯財務總結 (已扣除每年15萬元基本生活費)：</b><br>
+            - 生涯累積淨資產：<b style="font-size:18px; color:#2e7d32;">$${player.totalEarnings.toLocaleString()} 元</b><br>
             - 退休前最終薪級：<b>第 ${player.salaryGrade} 級</b> ($${finalSalary.toLocaleString()}/月)<br>
             <hr>
             📊 <b>最終能力值：</b><br>
