@@ -316,7 +316,7 @@
         "外勤郵務員（快捷包裹段）": [
             {
                 title: "🚗 工作群組的引擎燈危機",
-                desc: "上班群組突然跳出主管與同事對話：<div class='chat-simulation'><div class='chat-msg'><b>主管：</b> 幫我看一下引擎燈是不是還亮著紅燈，文瑋說已經亮兩三天了，幫我注意一下</div><div class='chat-msg'><b>稽查（梁俊彥）：</b> 注意一下，盡量早一點檢查</div><div class='chat-msg'><b>同事（徐昌誠）：</b> 上個月修車廠檢查過說沒問題，把故障燈消除了！</div></div>你身為這台車的駕駛，該怎麼在群組回覆？",
+                desc: "上班群組突然跳出主管與同事對話：<div class='chat-simulation'><div class='chat-msg'><b>我：</b> 幫我看一下引擎燈是不是還亮著紅燈，同事說已經亮兩三天了，幫我注意一下</div><div class='chat-msg'><b>專員：</b> 注意一下，盡量早一點檢查</div><div class='chat-msg'><b>稽查：</b> 上個月修車廠檢查過說沒問題，把故障燈消除了！</div></div>你身為這台車的駕駛，該怎麼在群組回覆？",
                 options: [
                     {
                         text: "a) 「我會繼續開邊觀察，只是先報告有此事情」",
@@ -383,7 +383,7 @@
                     {
                         text: "b) 通報緊急支援與後續調度",
                         result: "冷靜聯繫值班人員調派備用車！處事穩重，保住了全車郵件安全！",
-                        changes: { management: 1, smart: 1 }, addPoints: 0, grade: false
+                        changes: { management: 1, smart: 1 }, addPoints: 1, grade: true
                     }
                 ]
             }
@@ -548,6 +548,11 @@
     function startYear() {
         if (player.points > 0) return;
         if (player.age >= 65 || player.isFired) { endGame(false); return; }
+
+        let prologueBox = document.getElementById("prologue-container");
+        if (prologueBox) {
+            prologueBox.innerHTML = "";
+        }
 
         document.getElementById("btn-main").classList.add("hidden");
         document.getElementById("log-container").innerHTML = "";
