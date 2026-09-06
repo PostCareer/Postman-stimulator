@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>郵差人生模擬器 V10.1 自由轉職傳奇版</title>
+    <title>郵差人生模擬器 V10.2 自動心路歷程版</title>
     <style>
         :root {
             --green-main: #008751;
@@ -66,11 +66,10 @@
 
         .setup-group { margin-bottom: 12px; }
         label { display: block; margin-bottom: 4px; font-weight: bold; font-size: 14px; }
-        input, select, textarea {
+        input, select {
             width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 6px;
             box-sizing: border-box; font-size: 14px; font-family: inherit;
         }
-        textarea { resize: vertical; height: 80px; }
         .hidden { display: none !important; }
         .log-box {
             background: #fffde7; border-left: 4px solid #fbc02d; padding: 10px;
@@ -85,16 +84,16 @@
             background: #e1f5fe; border: 1px solid #81d4fa; border-radius: 6px;
             padding: 8px; margin-bottom: 8px; font-size: 12px; color: #0277bd;
         }
-        .story-preview {
-            background: #e8f5e9; border: 1px dashed var(--green-main); padding: 12px;
-            border-radius: 8px; margin-bottom: 15px; font-size: 13px; color: #2e7d32; line-height: 1.6;
+        .prologue-box {
+            background: #e8f5e9; border-left: 4px solid var(--green-main); padding: 12px;
+            margin-bottom: 15px; font-size: 13px; border-radius: 4px; line-height: 1.6; color: #2e7d32;
         }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h1>📮 郵差人生模擬器 V10.1</h1>
+    <h1>📮 郵差人生模擬器 V10.2</h1>
 
     <!-- 階段 1：基礎設定 -->
     <div id="setup-page-1">
@@ -104,8 +103,12 @@
             <input type="text" id="player-name" value="郵小弟">
         </div>
         <div class="setup-group">
-            <label for="player-age">入職起始年齡（可自由輸入）：</label>
+            <label for="player-age">入職起始年齡（手動輸入）：</label>
             <input type="number" id="player-age" value="25" min="18" max="60">
+        </div>
+        <div class="setup-group">
+            <label for="player-old-job">進郵局前的上一份職業（手動輸入）：</label>
+            <input type="text" id="player-old-job" value="民營物流司機">
         </div>
         <div class="setup-group">
             <label for="player-section">剛進局初次職務選擇：</label>
@@ -122,25 +125,7 @@
                 <option value="C">【天賦 C】鋼鐵體魄（體能強度與路線熟練加成）</option>
             </select>
         </div>
-        <button class="btn-action" onclick="goToStoryStep()">下一步：設定前職與轉職心路歷程</button>
-    </div>
-
-    <!-- 階段 1.5：轉職與心路歷程設定 -->
-    <div id="setup-page-2" class="hidden">
-        <h3>Step 2: 轉職背景與動態心路歷程</h3>
-        <div class="story-preview" id="story-preview-box">
-            <!-- 這裡會根據玩家填寫的年齡動態計算工作年資並產生介紹 -->
-        </div>
-        <div class="setup-group">
-            <label for="player-old-job">你進郵局前的上一份職業：</label>
-            <input type="text" id="player-old-job" value="民營物流司機" oninput="updateStoryText()">
-        </div>
-        <div class="setup-group">
-            <label for="player-why-post">轉職心路歷程與報考郵局契機：</label>
-            <textarea id="player-why-post">在外面私人企業每天加班卻面臨薪資凍漲與慣老闆壓榨，為了尋求穩定的生活與合理的保障，決定破釜沉舟報考中華郵政！</textarea>
-        </div>
-        <button class="btn-action" onclick="startGame()">確認背景，正式進局報到！</button>
-        <button class="btn-action" style="background:#757575;" onclick="backToSetup1()">回上一步</button>
+        <button class="btn-action" onclick="startGame()">確認設定，正式進局報到！</button>
     </div>
 
     <!-- 階段 2：主遊戲畫面 -->
@@ -179,6 +164,9 @@
                 <button class="btn-add" id="btn-add-relationship" onclick="addPoint('relationship')">+1</button>
             </div>
         </div>
+
+        <!-- 玩家背景心路歷程展示區（進遊戲後自動生成） -->
+        <div id="prologue-container"></div>
 
         <div class="event-card">
             <div class="event-title" id="event-title">準備出勤</div>
@@ -478,19 +466,7 @@
         ]
     };
 
-    function updateStoryText() {
-        let age = parseInt(document.getElementById("player-age").value) || 25;
-        let oldJob = document.getElementById("player-old-job").value || "各行各業勞工";
-        let workYears = Math.max(1, age - 18 - 3); // 簡單估算社會歷練年資
-
-        let previewBox = document.getElementById("story-preview-box");
-        previewBox.innerHTML = `
-            <b>【動態轉職背景預覽】</b><br>
-            你今年 <b>${age}</b> 歲。在踏入郵局前，你曾在 <b>${oldJob}</b> 打滾了約 <b>${workYears}</b> 年。這段社會歷練讓你嘗盡了冷暖，也促使你萌生轉職念頭，最終選擇報考中華郵政尋求穩定的人生！
-        `;
-    }
-
-    function goToStoryStep() {
+    function startGame() {
         let ageInput = parseInt(document.getElementById("player-age").value);
         if (isNaN(ageInput) || ageInput < 18) {
             alert("請輸入有效的起始年齡（至少 18 歲以上）！");
@@ -499,24 +475,14 @@
 
         player.name = document.getElementById("player-name").value || "郵小弟";
         player.startAge = ageInput;
-        player.code = document.getElementById("player-code").value;
+        player.age = ageInput;
+        player.oldJob = document.getElementById("player-old-job").value || "各行各業勞工";
         player.section = document.getElementById("player-section").value;
+        player.code = document.getElementById("player-code").value;
 
-        updateStoryText();
-
-        document.getElementById("setup-page-1").classList.add("hidden");
-        document.getElementById("setup-page-2").classList.remove("hidden");
-    }
-
-    function backToSetup1() {
-        document.getElementById("setup-page-2").classList.add("hidden");
-        document.getElementById("setup-page-1").classList.remove("hidden");
-    }
-
-    function startGame() {
-        player.oldJob = document.getElementById("player-old-job").value || "社會各界勞動者";
-        player.whyPost = document.getElementById("player-why-post").value || "追求穩定生活而報考";
-        player.age = player.startAge;
+        // 自動生成轉職心路歷程
+        let workYears = Math.max(1, player.startAge - 18 - 2);
+        player.whyPost = `在上一份「${player.oldJob}」行業打滾了約 ${workYears} 年，每日承受血汗加班與薪資凍漲的摧殘。為了尋求穩定的生活保障與合理的勞動環境，你終於下定決心報考中華郵政，正式展開郵務士人生！`;
 
         if (player.section === "快捷包裹段") {
             player.stats.stamina += 2;
@@ -531,8 +497,16 @@
         if (player.code === "C") { player.stats.stamina += 1; }
 
         document.getElementById("setup-page-1").classList.add("hidden");
-        document.getElementById("setup-page-2").classList.add("hidden");
         document.getElementById("game-page").classList.remove("hidden");
+
+        // 將自動生成的文字渲染到遊戲主畫面上
+        document.getElementById("prologue-container").innerHTML = `
+            <div class="prologue-box">
+                📜 <b>【入職心路歷程自動生成】</b><br>
+                你今年 <b>${player.startAge}</b> 歲。${player.whyPost}
+            </div>
+        `;
+
         updateUI();
     }
 
