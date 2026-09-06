@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>郵差人生模擬器 V11.1 隨機嗜好版</title>
+    <title>郵差人生模擬器 V11.4 天賦±2版</title>
     <style>
         :root {
             --green-main: #008751;
@@ -97,7 +97,7 @@
 <body>
 
 <div class="container">
-    <h1>📮 郵差人生模擬器 V11.1</h1>
+    <h1>📮 郵差人生模擬器 V11.4</h1>
 
     <div id="setup-page-1">
         <h3>Step 1: 基本角色資料</h3>
@@ -121,11 +121,13 @@
             </select>
         </div>
         <div class="setup-group">
-            <label for="player-code">選擇天賦傾向（隱藏至退休結算）：</label>
+            <label for="player-code">選擇天賦傾向（決定初始屬性 ±2）：</label>
             <select id="player-code">
-                <option value="A">【天賦 A】路線敏銳（路線熟練與人緣加成）</option>
-                <option value="B">【天賦 B】靈敏應變（處事應變與向上管理加成）</option>
-                <option value="C">【天賦 C】鋼鐵體魄（體能強度與路線熟練加成）</option>
+                <option value="A">【天賦 A】路線敏銳（路線熟練+2、人緣社交-2）</option>
+                <option value="B">【天賦 B】靈敏應變（處事應變+2、向上管理-2）</option>
+                <option value="C">【天賦 C】鋼鐵體魄（體能強度+2、處事應變-2）</option>
+                <option value="D">【天賦 D】社交達人（人緣社交+2、體能強度-2）</option>
+                <option value="E">【天賦 E】向上乖乖（向上管理+2、路線熟練-2）</option>
             </select>
         </div>
         <button class="btn-action" onclick="startGame()">確認設定，正式進局報到！</button>
@@ -576,13 +578,16 @@
         player.section = document.getElementById("player-section").value;
         player.code = document.getElementById("player-code").value;
 
-        // 起始時沒有不良嗜好，改由遊戲過程中隨機發生
         player.badHabit = null;
 
         let workYears = Math.max(1, player.startAge - 18 - 2);
         let randomTemplate = whyPostTemplates[Math.floor(Math.random() * whyPostTemplates.length)];
         player.whyPost = randomTemplate(player.oldJob, player.startAge, workYears);
 
+        // 重置基礎屬性皆為 10
+        player.stats = { stamina: 10, route: 10, management: 10, smart: 10, relationship: 10 };
+
+        // 依職務給予額外初始調整
         if (player.section === "快捷包裹段") {
             player.stats.stamina += 2;
             player.role = "外勤郵務員（快捷包裹段）";
@@ -591,9 +596,23 @@
             player.role = "外勤郵務員（混投段）";
         }
 
-        if (player.code === "A") { player.stats.route += 1; }
-        if (player.code === "B") { player.stats.smart += 1; }
-        if (player.code === "C") { player.stats.stamina += 1; }
+        // 依玩家選擇的天賦給予 ±2 修正
+        if (player.code === "A") {
+            player.stats.route += 2;
+            player.stats.relationship -= 2;
+        } else if (player.code === "B") {
+            player.stats.smart += 2;
+            player.stats.management -= 2;
+        } else if (player.code === "C") {
+            player.stats.stamina += 2;
+            player.stats.smart -= 2;
+        } else if (player.code === "D") {
+            player.stats.relationship += 2;
+            player.stats.stamina -= 2;
+        } else if (player.code === "E") {
+            player.stats.management += 2;
+            player.stats.route -= 2;
+        }
 
         for (let key in player.stats) {
             if (player.stats[key] < MIN_STAT) player.stats[key] = MIN_STAT;
@@ -726,7 +745,7 @@
                     stamina: "體力耗盡至最低點，身體徹底失能無法負荷工作，強制失能退場！",
                     route: "路線熟練度降至谷底，天天迷路送錯郵件遭到革職！",
                     management: "向上管理與職場關係完全崩潰，遭到長官聯手報復革職！",
-                    smart: "應變能力歸零，屢次惹出重大紕漏遭到解職！",
+                    smart: "應變能力歸零，屢次惹出重大漏遭到解職！",
                     relationship: "人緣惡劣至極，全局同仁連署排擠並投訴至總公司遭到革職！"
                 };
                 player.firedReason = reasonMap[key];
@@ -735,21 +754,17 @@
             }
         }
 
-        // 檢查隨機不良嗜好事件（如果目前沒有不良嗜好）
         if (!player.badHabit) {
             let roll = Math.random();
-            // 檳榔 15% (0.00 ~ 0.15)
             if (roll < 0.15) {
                 player.badHabit = "betel";
                 player.stats.stamina -= 8;
-                triggerEvent(badHabitEvents[1]); // 檳榔事件
+                triggerEvent(badHabitEvents[1]);
                 return;
-            } 
-            // 抽菸 15% (0.15 ~ 0.30)
-            else if (roll < 0.30) {
+            } else if (roll < 0.30) {
                 player.badHabit = "smoke";
                 player.stats.stamina -= 5;
-                triggerEvent(badHabitEvents[0]); // 抽菸事件
+                triggerEvent(badHabitEvents[0]);
                 return;
             }
         }
@@ -837,7 +852,6 @@
         let netYearSavings = totalYearIncome - livingExpense;
         player.totalEarnings += netYearSavings;
 
-        // 升薪級機制
         if (player.salaryGrade > 36 && Math.random() < 0.7) {
             player.salaryGrade--;
         }
