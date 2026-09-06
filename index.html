@@ -221,11 +221,10 @@
 
     const MAX_STAT = 20;
 
-    // 多樣化心路歷程模板庫
     const whyPostTemplates = [
         (job, age, workYrs) => `在上一份「${job}」行業打滾了約 ${workYrs} 年，每日承受血汗加班與薪資凍漲的摧殘。為了尋求穩定的生活保障與合理的勞動環境，你終於下定決心報考中華郵政，正式展開郵務士人生！`,
         (job, age, workYrs) => `厭倦了過去擔任「${job}」時無止盡的責任制與慣老闆壓榨。聽說郵局生活相對單純、見紅就休又有國營鐵飯碗保障，你毅然決然閉關苦讀，誓死拼上這局！`,
-        (job, age, workYrs) => `曾經以為「${job}`這條路能走得長久，卻發現現實狠狠打了臉。眼看年紀漸增，為了給家人（或自己）一個安定未來，你決定脫下前一份制服，換穿綠衣郵差大顯身手。`,
+        (job, age, workYrs) => `曾經以為「${job}」這條路能走得長久，卻發現現實狠狠打了臉。眼看年紀漸增，為了給自己一個安定未來，你決定脫下前一份制服，換穿綠衣郵差大顯身手。`,
         (job, age, workYrs) => `身邊朋友紛紛上岸當公務員與國營職員，讓你再也坐不住。告別了過去的「${job}」生涯，你發誓要靠實力考進中華郵政，重新奪回人生主導權！`,
         (job, age, workYrs) => `每天待在室內做「${job}」做到懷疑人生，嚮往在外趴趴走又不用看客戶臉色。於是你狠下心來報考郵局外勤，準備用雙腿與油門征服大街小巷！`
     ];
@@ -386,17 +385,17 @@
                 desc: "送包裹的車子引擎燈突然亮起警示，你跟稽查反應，但稽查堅持「沒有顧路（半路拋錨）就不用修」，你該怎麼辦？",
                 options: [
                     {
-                        text: "1. 默默承受一切，開著亮燈的車繼續硬撐送信（50%）",
+                        text: "1. 默默承受一切，開著亮燈的車繼續硬撐送信",
                         result: "車子在半路徹底縮缸冒煙拋錨！不僅延誤時效還挨了長官一頓高級檢討會。",
                         changes: { stamina: -2, management: -2 }, addPoints: 0, grade: false
                     },
                     {
-                        text: "2. 大聲跟稽查吆喝：報修啦操！（25%）",
+                        text: "2. 大聲跟稽查吆喝：報修啦！",
                         result: "你當場火大爆發飆罵，稽查被你的氣勢嚇到馬上妥協叫修！雖然在局裡黑了一點，但車修好了。",
                         changes: { smart: 1, relationship: -2 }, addPoints: 1, grade: false
                     },
                     {
-                        text: "3. 跟稽查說不修我就不做這個缺了（25%）",
+                        text: "3. 跟稽查說不修我就不做這個缺了",
                         result: "直接拿職缺威脅，稽查摸摸鼻子趕快派車處理，成功捍衛自己的勞動權益！",
                         changes: { management: 2, smart: 1 }, addPoints: 1, grade: true
                     }
@@ -489,7 +488,6 @@
         player.section = document.getElementById("player-section").value;
         player.code = document.getElementById("player-code").value;
 
-        // 從多樣化模板庫中隨機挑選一個心路歷程生成函數
         let workYears = Math.max(1, player.startAge - 18 - 2);
         let randomTemplate = whyPostTemplates[Math.floor(Math.random() * whyPostTemplates.length)];
         player.whyPost = randomTemplate(player.oldJob, player.startAge, workYears);
@@ -509,7 +507,6 @@
         document.getElementById("setup-page-1").classList.add("hidden");
         document.getElementById("game-page").classList.remove("hidden");
 
-        // 拿掉「自動生成」四個字，改為純標題
         document.getElementById("prologue-container").innerHTML = `
             <div class="prologue-box">
                 📜 <b>【入職心路歷程】</b><br>
