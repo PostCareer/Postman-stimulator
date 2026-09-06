@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>郵差人生模擬器 V9.0 終極擴充版</title>
+    <title>郵差人生模擬器 V10.0 深度傳奇版</title>
     <style>
         :root {
             --green-main: #008751;
@@ -66,10 +66,11 @@
 
         .setup-group { margin-bottom: 12px; }
         label { display: block; margin-bottom: 4px; font-weight: bold; font-size: 14px; }
-        input, select {
+        input, select, textarea {
             width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 6px;
-            box-sizing: border-box; font-size: 14px;
+            box-sizing: border-box; font-size: 14px; font-family: inherit;
         }
+        textarea { resize: vertical; height: 60px; }
         .hidden { display: none !important; }
         .log-box {
             background: #fffde7; border-left: 4px solid #fbc02d; padding: 10px;
@@ -84,22 +85,30 @@
             background: #e1f5fe; border: 1px solid #81d4fa; border-radius: 6px;
             padding: 8px; margin-bottom: 8px; font-size: 12px; color: #0277bd;
         }
+        .story-preview {
+            background: #e8f5e9; border: 1px dashed var(--green-main); padding: 12px;
+            border-radius: 8px; margin-bottom: 15px; font-size: 13px; color: #2e7d32; line-height: 1.6;
+        }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h1>📮 郵差人生模擬器 V9.0</h1>
+    <h1>📮 郵差人生模擬器 V10.0</h1>
 
-    <!-- 階段 1：設定 -->
-    <div id="setup-page">
+    <!-- 階段 1：基礎設定 -->
+    <div id="setup-page-1">
+        <h3>Step 1: 基本角色資料</h3>
         <div class="setup-group">
             <label for="player-name">郵務士姓名：</label>
             <input type="text" id="player-name" value="郵小弟">
         </div>
         <div class="setup-group">
             <label for="player-age">入職起始年齡：</label>
-            <input type="number" id="player-age" value="18" min="18" max="60">
+            <select id="player-age" onchange="toggleStoryStep()">
+                <option value="18">18 歲（應屆畢業生直接投身郵政）</option>
+                <option value="22" selected>22 歲或以上（社會歷練後轉職考進來）</option>
+            </select>
         </div>
         <div class="setup-group">
             <label for="player-section">剛進局初次職務選擇：</label>
@@ -116,13 +125,31 @@
                 <option value="C">【天賦 C】鋼鐵體魄（體能強度與路線熟練加成）</option>
             </select>
         </div>
-        <button class="btn-action" onclick="startGame()">正式進局報到！</button>
+        <button class="btn-action" onclick="goToStoryStep()">下一步：填寫轉職心路歷程</button>
+    </div>
+
+    <!-- 階段 1.5：轉職與心路歷程設定（僅 22 歲以上或可自訂背景者顯示） -->
+    <div id="setup-page-2" class="hidden">
+        <h3>Step 2: 轉職背景與報考心聲</h3>
+        <div class="story-preview">
+            你決定在社會闖蕩一番後，重新抉擇職涯。請填寫你的前一份工作與報考郵局的契機，這將成為你郵局人生的序幕！
+        </div>
+        <div class="setup-group">
+            <label for="player-old-job">你進郵局前的上一份職業：</label>
+            <input type="text" id="player-old-job" value="民營物流司機 / 慣老闆血汗工廠勞工">
+        </div>
+        <div class="setup-group">
+            <label for="player-why-post">為什麼想考郵局？（心路歷程）：</label>
+            <textarea id="player-why-post">外面私人企業薪水凍漲又沒保障，想求個穩定生活，順便鍛鍊自己，於是狠下心拼一把考進中華郵政！</textarea>
+        </div>
+        <button class="btn-action" onclick="startGame()">確認背景，正式進局報到！</button>
+        <button class="btn-action" style="background:#757575;" onclick="backToSetup1()">回上一步</button>
     </div>
 
     <!-- 階段 2：主遊戲畫面 -->
     <div id="game-page" class="hidden">
         <div class="status-bar">
-            <div class="status-item">年齡 / 職務<span id="stat-age">18歲</span></div>
+            <div class="status-item">年齡 / 職務<span id="stat-age">22歲</span></div>
             <div class="status-item">目前薪級 / 月薪<span id="stat-salary">55級 ($36,250)</span></div>
             <div class="status-item">生涯累積總薪資<span id="stat-total-salary" style="color:#d32f2f;">$0</span></div>
             <div class="status-item">考績甲等累計<span id="stat-eval">0 次</span></div>
@@ -195,7 +222,8 @@
     };
 
     let player = {
-        name: "", code: "A", section: "混投段", age: 18, startAge: 18, role: "外勤郵務員（混投段）",
+        name: "", code: "A", section: "混投段", age: 22, startAge: 22, role: "外勤郵務員（混投段）",
+        oldJob: "", whyPost: "",
         salaryGrade: 55, 
         totalEarnings: 0,
         points: 5,
@@ -208,7 +236,6 @@
 
     const MAX_STAT = 20;
 
-    // 通用事件池（完整收錄經典、新通用事件與擴充事件）
     const commonEvents = [
         {
             title: "🌧️ 突如其來的暴雨考驗",
@@ -223,26 +250,21 @@
                     text: "b) 請求稽查支援！",
                     result: "稽查拿著雨衣前來救援，雖然被酸了兩句『沒看氣象預報喔』，但成功保住了信件與身體！",
                     changes: { smart: 1, management: -1 }, addPoints: 1, grade: false
-                },
-                {
-                    text: "c) 把車子推進水溝，一了百了",
-                    result: "車子直接報銷，你因毀損公物遭到記大過懲處！",
-                    changes: { management: -4, stamina: -2 }, addPoints: 0, grade: false
                 }
             ]
         },
         {
             title: "📲 LINE 社交地獄爆發",
-            desc: "午休手機滑太爽，不小心把私下的『約砲訊息』誤傳到郵局大群組（內有股長、稽查與全體同事）！",
+            desc: "午休手機滑太爽，不小心把私下的訊息誤傳到郵局大群組（內有股長、稽查與全體同事）！",
             options: [
                 {
                     text: "按一下『刪除』（只有自己看不到）",
-                    result: "慘了！你按到刪除，全群組幾百個人都看到了，成為局內傳奇社會性死亡代表！",
+                    result: "慘了！全群組幾百個人都看到了，成為局內傳奇社會性死亡代表！",
                     changes: { management: -4, relationship: -4 }, addPoints: 0, grade: false
                 },
                 {
                     text: "手速極快秒按『收回』，並補一句『帳號被盜/好友傳錯』",
-                    result: "雖然有幾個人看到，但你死不承認！靠著極強的心理素質撐過去了，大家心照不宣。",
+                    result: "雖然有幾個人看到，但你死不承認！靠著極強的心理素質撐過去了。",
                     changes: { smart: 2, management: -1 }, addPoints: 0, grade: false
                 }
             ]
@@ -260,59 +282,6 @@
                     text: "二. 不去醫院，在家硬撐休息就好",
                     result: "病情拖久惡化，送信到一半直接暈倒送醫，差點小命不保！",
                     changes: { stamina: -3 }, addPoints: 0, grade: false
-                }
-            ]
-        },
-        {
-            title: "💥 外出雷殘與工傷拉鋸",
-            desc: "在外送信不小心雷殘犁田，腳踝嚴重受傷！此時稽查打電話來請你「共體時艱」撐著出來上班。",
-            options: [
-                {
-                    text: "1. 好啦我去...結果舊傷復發，氣得怒告郵局！",
-                    result: "勞資糾紛搬上檯面，雖然告贏了補助，但在局裡黑到發亮，長官同事見到你都頭痛。",
-                    changes: { management: -3, relationship: -3 }, addPoints: 0, grade: false
-                },
-                {
-                    text: "2. 拒絕！申請工傷休養，隨後轉調他局繼續搞事",
-                    result: "你成功休養並轉調到隔壁分局，繼續開啟新一輪的局內傳奇生活！",
-                    changes: { smart: 2, relationship: 1 }, addPoints: 1, grade: false
-                }
-            ]
-        },
-        {
-            title: "😍 郵務窗口的超絕正妹",
-            desc: "一位顏值媲美明星的妹子來郵局領掛號，你看到心頭一震，此時你的內心小劇場開始作祟...",
-            options: [
-                {
-                    text: "1. 拿出手機默默偷拍",
-                    result: "被正妹當場抓包喊『有變態！』直接報警處理！你被記大過並全局通報！",
-                    changes: { management: -4, relationship: -4 }, addPoints: 0, grade: false
-                },
-                {
-                    text: "2. 去看招領單住址跟名字，暗中記下來",
-                    result: "雖然沒被抓包，但行為有點變態，良心備受譴責...",
-                    changes: { smart: -1, relationship: -1 }, addPoints: 0, grade: false
-                },
-                {
-                    text: "3. 貪婪心爆發：我要全部！（偷拍 + 記個資）",
-                    result: "違規行為太誇張被民眾直接告上總公司！性騷擾成立，移送法辦，你直接被免職開除！",
-                    triggerFire: true, fireReason: "因犯下嚴重個資法與性騷擾案件，遭到郵局直接免職開除！"
-                }
-            ]
-        },
-        {
-            title: "📋 關鍵回執忘了繳回",
-            desc: "結算時才發現大批雙掛號回執忘記繳回銷案，這下皮繃緊了！",
-            options: [
-                {
-                    text: "1、趕緊加班補繳",
-                    result: "雖然多花了不少時間補件，挨了內勤一頓罵，但平安過關！",
-                    changes: { management: 1 }, addPoints: 0, grade: false
-                },
-                {
-                    text: "2、塞進車廂深處假裝沒這回事",
-                    result: "被稽查抽查抓包！業務重大違失，考績直接吃丙！",
-                    changes: { management: -3 }, addPoints: 0, grade: false
                 }
             ]
         },
@@ -382,7 +351,6 @@
         }
     ];
 
-    // 各職務專屬事件池
     const jobSpecificEvents = {
         "外勤郵務員（混投段）": [
             {
@@ -420,6 +388,27 @@
         ],
         "外勤郵務員（快捷包裹段）": [
             {
+                title: "🚗 快捷郵車引擎燈亮起危機",
+                desc: "送包裹的車子引擎燈突然亮起警示，你跟稽查反應，但稽查堅持「沒有顧路（半路拋錨）就不用修」，你該怎麼辦？",
+                options: [
+                    {
+                        text: "1. 默默承受一切，開著亮燈的車繼續硬撐送信（50%）",
+                        result: "車子在半路徹底縮缸冒煙拋錨！不僅延誤時效還挨了長官一頓高級檢討會。",
+                        changes: { stamina: -2, management: -2 }, addPoints: 0, grade: false
+                    },
+                    {
+                        text: "2. 大聲跟稽查吆喝：報修啦操！（25%）",
+                        result: "你當場火大爆發飆罵，稽查被你的氣勢嚇到馬上妥協叫修！雖然在局裡黑了一點，但車修好了。",
+                        changes: { smart: 1, relationship: -2 }, addPoints: 1, grade: false
+                    },
+                    {
+                        text: "3. 跟稽查說不修我就不做這個缺了（25%）",
+                        result: "直接拿職缺威脅，稽查摸摸鼻子趕快派車處理，成功捍衛自己的勞動權益！",
+                        changes: { management: 2, smart: 1 }, addPoints: 1, grade: true
+                    }
+                ]
+            },
+            {
                 title: "📦 中秋節包裹量暴增的煉獄",
                 desc: "中秋節檔期包裹量暴增三倍，偏偏資深同事提早排休放假，值班稽查又有嚴重口臭，你該如何應對？",
                 options: [
@@ -432,27 +421,6 @@
                         text: "任勞任怨，加班送到完！",
                         result: "頂著口臭稽查的碎念與滿坑滿谷的包裹一路加班到深夜，雖然累垮但順利消化完畢！",
                         changes: { stamina: -2, management: 2 }, addPoints: 1, grade: true
-                    },
-                    {
-                        text: "擺爛！沒送完就直接按系統亂填「不在家/地址不詳」",
-                        result: "隔天客訴電話被打爆，被稽查抓到造假，記小過一次懲處！",
-                        changes: { smart: -2, management: -3 }, addPoints: 0, grade: false
-                    }
-                ]
-            },
-            {
-                title: "📦 重型易碎品當場破裂慘案",
-                desc: "搬運一個標註「絕對易碎・精品陶瓷」的大箱子時，不小心手滑從車上摔落，裡面傳出清脆的碎裂聲...",
-                options: [
-                    {
-                        text: "a) 當作沒事照常投遞，讓收件人簽收",
-                        result: "收件人一拆包裹氣炸直接投訴總公司！你面臨重大違失懲處。",
-                        changes: { management: -3, smart: -1 }, addPoints: 0, grade: false
-                    },
-                    {
-                        text: "b) 主動回報局內並依照流程走破損賠償程序",
-                        result: "雖然挨了主管一頓念，並寫了落長的檢討報告，但展現誠實負責的態度。",
-                        changes: { management: 1, smart: 1 }, addPoints: 0, grade: false
                     }
                 ]
             }
@@ -509,32 +477,52 @@
                         changes: { relationship: 1 }, addPoints: 0, grade: false
                     }
                 ]
-            },
-            {
-                title: "👤 新同事空降報到",
-                desc: "他局調來一位新同事，聽說背景硬、脾氣古怪又非常難相處，大家避之唯恐不及。你決定怎麼應對？",
-                options: [
-                    {
-                        text: "1. 阿諛奉承",
-                        result: "你選擇奉承這位空降新同事，成功和他建立極佳的關係；但其他基層下屬看 in 眼裡，覺得你趨炎附勢、雙面人，導致大家對你怨聲載道！",
-                        changes: { management: 1, relationship: -3 }, addPoints: 0, grade: false
-                    },
-                    {
-                        text: "2. 按規矩行事",
-                        result: "你保持不卑不亢的態度，一切按照局內規章與流程走。雖然新同事起初有些微詞，但也挑不出毛病，基層同仁也對你公正的態度表示尊重。",
-                        changes: { smart: 1, management: 1 }, addPoints: 0, grade: false
-                    }
-                ]
             }
         ]
     };
 
-    function startGame() {
+    function toggleStoryStep() {
+        let ageSelect = document.getElementById("player-age").value;
+        if (ageSelect === "18") {
+            // 如果選18歲，可以直接跳過背景填寫，或自動填入預設
+            document.getElementById("player-old-job").value = "應屆畢業生";
+            document.getElementById("player-why-post").value = "剛畢業就順利考取郵局，展開米飯碗生涯！";
+        } else {
+            document.getElementById("player-old-job").value = "民營物流司機 / 慣老闆血汗工廠勞工";
+            document.getElementById("player-why-post").value = "外面私人企業薪水凍漲又沒保障，想求個穩定生活，於是狠下心拼一把考進中華郵政！";
+        }
+    }
+
+    function goToStoryStep() {
         player.name = document.getElementById("player-name").value || "郵小弟";
-        player.startAge = parseInt(document.getElementById("player-age").value) || 18;
-        player.age = player.startAge;
+        player.startAge = parseInt(document.getElementById("player-age").value) || 22;
         player.code = document.getElementById("player-code").value;
         player.section = document.getElementById("player-section").value;
+
+        // 如果是18歲，直接略過第二步進遊戲；如果是22歲以上，進入第二步填寫轉職心路歷程
+        if (player.startAge === 18) {
+            startGame();
+        } else {
+            document.getElementById("setup-page-1").classList.add("hidden");
+            document.getElementById("setup-page-2").classList.remove("hidden");
+        }
+    }
+
+    function backToSetup1() {
+        document.getElementById("setup-page-2").classList.add("hidden");
+        document.getElementById("setup-page-1").classList.remove("hidden");
+    }
+
+    function startGame() {
+        if (player.startAge !== 18) {
+            player.oldJob = document.getElementById("player-old-job").value || "社會各界勞動者";
+            player.whyPost = document.getElementById("player-why-post").value || "追求穩定生活而報考";
+        } else {
+            player.oldJob = "應屆畢業生";
+            player.whyPost = "剛畢業即就業";
+        }
+
+        player.age = player.startAge;
 
         if (player.section === "快捷包裹段") {
             player.stats.stamina += 2;
@@ -548,7 +536,8 @@
         if (player.code === "B") { player.stats.smart += 1; }
         if (player.code === "C") { player.stats.stamina += 1; }
 
-        document.getElementById("setup-page").classList.add("hidden");
+        document.getElementById("setup-page-1").classList.add("hidden");
+        document.getElementById("setup-page-2").classList.add("hidden");
         document.getElementById("game-page").classList.remove("hidden");
         updateUI();
     }
@@ -803,16 +792,14 @@
             finalTitle = "【城市穿梭機．高效收攬王】";
         }
 
-        let firedMsg = player.isFired ? `<br><b style="color:red;">免職原因：</b> ${player.firedReason}<br>` : "";
         let finalSalary = salaryTable[player.salaryGrade] || 36250;
 
         document.getElementById("summary-content").innerHTML = `
             <b>姓名：</b> ${player.name}<br>
-            <b>開局設定：</b> ${player.startAge} 歲入職<br>
-            <b>初始職務：</b> ${player.section}<br>
+            <b>背景經歷：</b> 曾任「${player.oldJob}」，因「${player.whyPost}」而決定踏入郵局。<br>
+            <b>入職年齡：</b> ${player.startAge} 歲入職 (${player.section})<br>
             <b>揭曉天賦：</b> <span style="color:#0288d1; font-weight:bold;">${codeNameMap[player.code]}</span><br>
             <b>生涯稱號：</b> <span style="font-size:18px; color:#d32f2f; font-weight:bold;">${finalTitle}</span><br>
-            ${firedMsg}
             <hr>
             💰 <b>生涯財務總結：</b><br>
             - 生涯累積總薪資：<b style="font-size:18px; color:#2e7d32;">$${player.totalEarnings.toLocaleString()} 元</b><br>
