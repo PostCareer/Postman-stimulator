@@ -1435,7 +1435,7 @@ document.getElementById("eventTitle").innerText =
 "🔍 恭喜成為郵務稽查！";
 
 document.getElementById("eventDesc").innerText =
-`經過局內競爭，你成功脫穎而出。
+"經過局內競爭，你成功脫穎而出。
 
 從今天開始，
 你不用再每天騎車送信了。
@@ -2225,7 +2225,7 @@ $${player.money.toLocaleString()}
 <b>郵差人生模擬器結束。</b>
 
 接下來的內勤人生，
-已經不是這款遊戲的故事了🤣
+已經不是這課遊戲的故事了🤣
 
 `;
 
@@ -3022,153 +3022,14 @@ stamina: -1
 
 {
 
-text: "安全停靠休息一下",
+text: "安全停課休息一下",
 
 result:
 "你選擇安全第一。\n雖然進度受到影響，但避免了事故。",
 
 changes: {
-smart: 2
-}
-
-}
-
-]
-
-}
-
-],
-
-
-/* 白天收攬 */
-
-"白天收攬": [
-
-{
-
-title: "📦 廠商突然爆量",
-
-desc:
-"合作廠商今天突然出現數百箱包裹。\n你的車子根本快裝不下。",
-
-options: [
-
-{
-
-text: "全部硬塞上車",
-
-result:
-"你發揮空間魔術。\n成功塞進去，但整路都提心吊膽。",
-
-changes: {
-stamina: -2
-}
-
-},
-
-{
-
-text: "申請第二趟或支援車輛",
-
-result:
-"工作安全完成。\n廠商也認為你的處理方式很專業。",
-
-changes: {
-smart: 2,
-management: 1
-},
-
-grade: "A"
-
-}
-
-]
-
-}
-
-],
-
-
-/* 稽查 */
-
-"郵務稽查": [
-
-{
-
-title: "🔍 郵務事故",
-
-desc:
-"局內發生重大投遞爭議。\n局長要你立刻調查。",
-
-options: [
-
-{
-
-text: "先聽所有人的說法",
-
-result:
-"你沒有急著下結論。\n最後成功找到真正問題。",
-
-changes: {
-smart: 2,
-relationship: 1
-},
-
-points: 1
-
-},
-
-{
-
-text: "直接依規定處理",
-
-result:
-"你處理速度很快。\n但部分同事認為你太過嚴格。",
-
-changes: {
-management: 2,
-relationship: -1
-}
-
-}
-
-]
-
-},
-
-{
-
-title: "🗣️ 民眾衝進郵局",
-
-desc:
-"一名民眾衝進郵局拍桌。\n局長看了你一眼：\n『稽查，你去處理。』",
-
-options: [
-
-{
-
-text: "先安撫情緒",
-
-result:
-"經過耐心溝通。\n民眾終於願意坐下來談。",
-
-changes: {
-relationship: 2,
-management: 1
-}
-
-},
-
-{
-
-text: "拿規定直接解釋",
-
-result:
-"你的說法完全正確。\n但民眾離開時還是很不爽。",
-
-changes: {
 smart: 1,
-management: 1
+stamina: 1
 }
 
 }
