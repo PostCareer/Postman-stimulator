@@ -623,27 +623,58 @@ class="btn-main"
 onclick="startYear()">
 
 開始今年工作
+/* =========================================================
+   稽查競爭
+========================================================= */
 
-</button>
+function competeInspector() {
 
-<div class="history-box">
+const score =
 
-<b>📜 生涯紀錄</b>
+player.stats.management * 2 +
+player.stats.smart * 1.5 +
+player.stats.relationship * 1.2 +
+Math.random() * 20;
 
-<div id="historyContainer"></div>
 
-</div>
+if (score >= 65) {
 
-</div>
+player.role = "郵務稽查";
 
-<!-- =========================
-     結局頁面
-========================= -->
+addHistory(
+"🏆 成功競爭郵務稽查職缺！"
+);
 
-<div
-id="endingPage"
-class="hidden">
+document.getElementById("eventTitle").innerText =
+"🔍 恭喜成為郵務稽查！";
 
+// 這裡改成用反引號 (`) 讓多行字串正常運作
+document.getElementById("eventDesc").innerText = 
+`經過局內競爭，你成功脫穎而出。
+
+從今天開始，
+你不用再每天騎車送信了。
+
+但你即將面對的，
+可能是更可怕的事情。
+
+——同事。`;
+
+} else {
+
+addHistory(
+"😢 競爭郵務稽查失敗。"
+);
+
+alert(
+"競爭失敗！其他同事的向上管理似乎比你更強🤣"
+);
+
+}
+
+updateUI();
+
+}
 <div class="result-card">
 
 <div
